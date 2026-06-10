@@ -5,10 +5,13 @@
 This is a static single-page app for World Cup 2026 predictions. The main deliverable is `prode-mundial-2026.html`, which contains all HTML, CSS, and vanilla JavaScript inline. Keep it self-contained: no build step, npm dependencies, or CDN assets.
 
 - `prode-mundial-2026.html` - production app file.
-- `DOCUMENTACION.md` - technical documentation by feature/function; update it when behavior changes.
+- `index.html` - static redirect entrypoint for hosts that expect an index file.
+- `docs/DOCUMENTACION.md` - technical documentation by feature/function; update it when behavior changes.
 - `CLAUDE.md` - maintainer notes, sandbox constraints, and known pitfalls.
-- `world-cup_2026.json` / `world-cup_2026.csv` - fixture source data.
+- `docs/DEPLOY.md` - static hosting and Vercel deployment notes.
+- `world-cup_2026.json` - fixture source data.
 - `sugerencia-claude.json` - importable prediction example.
+- `vercel.json` - root rewrite for static deployment.
 
 ## Build, Test, and Development Commands
 
@@ -40,4 +43,4 @@ Pull requests should include a short behavior summary, touched files, manual ver
 
 ## Agent-Specific Instructions
 
-Keep edits scoped and preserve the single-file app constraint. If you modify `prode-mundial-2026.html`, reread the file from disk before reporting completion, because maintainer notes call out prior editor/mount desynchronization issues. Keep `DOCUMENTACION.md` synchronized with any functional changes.
+Keep edits scoped and preserve the single-file app constraint. If you modify `prode-mundial-2026.html`, reread the file from disk before reporting completion, because maintainer notes call out prior editor/mount desynchronization issues. Keep `docs/DOCUMENTACION.md` synchronized with any functional changes.

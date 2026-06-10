@@ -1,0 +1,20 @@
+# Sistema operativo
+.DS_Store
+Thumbs.db
+
+# Editores
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs y temporales
+*.log
+tmp/
+temp/
+
+# Dependencias/builds accidentales
+node_modules/
+dist/
+build/
+.vercel/

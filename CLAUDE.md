@@ -7,9 +7,9 @@ Guía para desarrollar/mantener esta app. Leé esto antes de tocar el código.
 App de una sola página para completar pronósticos de **marcador exacto** del Mundial FIFA 2026. Prodes ilimitados, tabla de posiciones en vivo, asistencia de IA por copiar/pegar, persistencia local.
 
 - **Entregable:** `prode-mundial-2026.html` — un único archivo autocontenido (HTML + CSS + JS vanilla). **Sin dependencias, sin build, sin CDN.** Todo inline.
-- **Documentación funcional por función:** `DOCUMENTACION.md` (mantenela sincronizada al cambiar funciones).
+- **Documentación funcional por función:** `docs/DOCUMENTACION.md` (mantenela sincronizada al cambiar funciones).
 - **Datos:** fixture oficial, 104 partidos (72 grupos en A–L + 32 eliminatorias). Origen: `world-cup_2026.json`. Letras de grupo verificadas contra el fixture público de ProdeLibre.
-- **Archivos de datos auxiliares:** `matches.json` (data enriquecida con grupo + nombres ES + banderas), `sugerencia-claude.json` (un prode base importable).
+- **Archivos de datos auxiliares:** `sugerencia-claude.json` (un prode base importable).
 
 ## Dónde corre y por qué importa
 
@@ -35,7 +35,7 @@ El mismo HTML corre **mejor** fuera del sandbox (doble-click al `.html`): ahí `
 - Render: `render()` orquesta → `buildProdeBar`, `buildNav`, y `renderGroup`/`renderKO`. La tabla de posiciones (`standingsTable`) se recalcula desde `preds` en cada render del grupo.
 - IA: `openPrompt(scope)` arma texto (`buildPrompt`) para pegar afuera; `openPaste()`+`applyPaste()` ingieren el JSON devuelto (`parseJSON` tolera markdown/ruido).
 
-Para el detalle función por función, ver `DOCUMENTACION.md`.
+Para el detalle función por función, ver `docs/DOCUMENTACION.md`.
 
 ## Convenciones
 

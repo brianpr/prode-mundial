@@ -2,7 +2,7 @@
 
 App de una sola página (HTML + CSS + JS vanilla, sin dependencias) para completar pronósticos de marcador exacto del Mundial FIFA 2026. Soporta prodes ilimitados, asistencia de IA por copiar/pegar, y persistencia local con fallback.
 
-Archivo: `prode-mundial-2026.html` (autocontenido). Fuente de datos: fixture oficial (104 partidos: 72 de fase de grupos en 12 grupos A–L + 32 de eliminatorias).
+Archivo: `prode-mundial-2026.html` (autocontenido). Fuente de datos: fixture oficial (104 partidos: 72 de fase de grupos en 12 grupos A–L + 32 de eliminatorias). Guia de publicacion: `docs/DEPLOY.md`.
 
 ---
 
