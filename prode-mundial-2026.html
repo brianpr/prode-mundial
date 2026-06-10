@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prode Mundial 2026</title>
+<style>
+:root{ color-scheme: light;
+ --bg:#f4f6fb; --card:#ffffff; --ink:#0f172a; --mut:#64748b; --line:#e2e8f0;
+ --accent:#2563eb; --accentbg:#eff6ff;
+ --ok:#16a34a; --okbg:#f0fdf4; --ai:#0891b2; --aibg:#ecfeff;}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;padding:0 0 60px}
+.wrap{max-width:960px;margin:0 auto;padding:14px}
+header{position:sticky;top:0;z-index:30;background:var(--bg);padding-top:10px;border-bottom:1px solid var(--line)}
+h1{font-size:20px;margin:0 0 2px;display:flex;align-items:center;gap:8px}
+.sub{color:var(--mut);font-size:12.5px;margin-bottom:10px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.prodebar{display:flex;gap:6px;overflow-x:auto;padding:4px 2px 6px;-webkit-overflow-scrolling:touch}
+.pchip{flex:none;border:1.5px solid var(--line);background:#fff;padding:7px 13px;border-radius:11px;font-weight:700;cursor:pointer;font-size:13.5px;color:var(--mut);display:flex;align-items:center;gap:7px;transition:.12s}
+.pchip .dot{width:9px;height:9px;border-radius:50%;background:var(--c);flex:none}
+.pchip.active{border-color:var(--c);color:var(--c);background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.1)}
+.pchip.active .dot{box-shadow:0 0 0 3px color-mix(in srgb,var(--c) 22%,transparent)}
+.pnew{flex:none;border:1.5px dashed var(--line);background:transparent;padding:7px 12px;border-radius:11px;font-weight:700;cursor:pointer;font-size:13.5px;color:var(--mut)}
+.pnew:hover{border-color:var(--accent);color:var(--accent)}
+.btn{border:1px solid var(--line);background:#fff;border-radius:9px;padding:7px 11px;font-size:12.5px;font-weight:600;cursor:pointer;color:var(--ink);display:inline-flex;align-items:center;gap:5px;transition:.12s}
+.btn:hover{background:#f8fafc}
+.btn:active{transform:scale(.97)}
+.btn.ai{color:var(--ai);border-color:#a5f3fc;background:var(--aibg)}
+.btn.ai:hover{background:#cffafe}
+.btn.ghost{border-style:dashed}
+.btn.sm{padding:5px 8px;font-size:11.5px}
+.btn.danger:hover{background:#fef2f2;border-color:#fecaca;color:#dc2626}
+.btn:disabled{opacity:.5;cursor:wait}
+.navchips{display:flex;gap:5px;flex-wrap:wrap;margin:10px 0 4px}
+.chip{border:1px solid var(--line);background:#fff;border-radius:20px;padding:5px 11px;font-size:12.5px;font-weight:700;cursor:pointer;color:var(--mut)}
+.chip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.chip.done{border-color:var(--ok);color:var(--ok)}
+.chip.on.done{background:var(--ok);border-color:var(--ok);color:#fff}
+.bar{height:5px;background:var(--line);border-radius:3px;overflow:hidden;margin:8px 0 2px}
+.bar>i{display:block;height:100%;background:var(--c,var(--accent));transition:.3s}
+.section{margin-top:18px}
+.gcard{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:14px;box-shadow:0 1px 2px rgba(15,23,42,.04)}
+.ghead{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
+.gtitle{font-size:16px;font-weight:800;display:flex;align-items:center;gap:8px}
+.gletter{width:30px;height:30px;border-radius:8px;background:var(--accent);color:#fff;display:grid;place-items:center;font-size:15px}
+.match{display:grid;grid-template-columns:1fr auto 1fr auto;gap:6px;align-items:center;padding:7px 0;border-top:1px solid var(--line)}
+.match:first-of-type{border-top:0}
+.tm{display:flex;align-items:center;gap:6px;min-width:0}
+.tm.home{justify-content:flex-end;text-align:right}
+.tm .fl{font-size:18px;flex:none}
+.tm .nm{font-weight:600;font-size:13.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.score{display:flex;align-items:center;gap:4px}
+.score input{width:34px;height:34px;text-align:center;border:1.5px solid var(--line);border-radius:8px;font-size:16px;font-weight:700;color:var(--ink);background:#fff}
+.score input:focus{outline:0;border-color:var(--accent);background:var(--accentbg)}
+.score .x{color:var(--mut);font-weight:700;font-size:13px}
+.mxai{border:0;background:transparent;cursor:pointer;font-size:15px;opacity:.5;padding:2px}
+.mxai:hover{opacity:1}
+.meta{grid-column:1/-1;font-size:10.5px;color:var(--mut);padding-left:2px;margin-top:-2px}
+table.stand{width:100%;border-collapse:collapse;margin-top:10px;font-size:12px}
+.stand th{color:var(--mut);font-weight:600;text-align:center;padding:4px 3px;font-size:10.5px;text-transform:uppercase}
+.stand th:first-child,.stand td:first-child{text-align:left}
+.stand td{padding:5px 3px;text-align:center;border-top:1px solid var(--line)}
+.stand tr.q td{background:var(--okbg)}
+.stand tr.q td:first-child{font-weight:700}
+.stand .pos{display:inline-block;width:16px;color:var(--mut)}
+.stand tr.q .pos{color:var(--ok);font-weight:800}
+.kteam input.tn{width:100%;border:1px dashed var(--line);border-radius:7px;padding:6px 8px;font-size:13px;font-weight:600;color:var(--ink);background:#fff}
+.kteam input.tn:focus{outline:0;border-color:var(--accent);border-style:solid}
+.klabel{font-size:10px;color:var(--mut);text-transform:uppercase;letter-spacing:.3px;margin-bottom:3px}
+.toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:9px 16px;border-radius:10px;font-size:13px;opacity:0;pointer-events:none;transition:.25s;z-index:60;max-width:90%}
+.toast.show{opacity:1}
+.foot{text-align:center;color:var(--mut);font-size:11px;margin-top:20px}
+.legend{font-size:11px;color:var(--mut);display:flex;gap:12px;flex-wrap:wrap;margin-top:6px}
+.legend i{width:10px;height:10px;border-radius:3px;display:inline-block;vertical-align:middle;margin-right:4px;background:var(--okbg);border:1px solid var(--ok)}
+.aihint{font-size:11px;color:var(--ai);background:var(--aibg);border:1px solid #a5f3fc;border-radius:8px;padding:7px 10px;margin-top:8px}
+.iinput{margin:4px 16px 0;border:1.5px solid var(--line);border-radius:9px;padding:10px 12px;font-size:15px;color:var(--ink);background:#fff}
+.iinput:focus{outline:0;border-color:var(--accent)}
+.modal{position:fixed;inset:0;background:rgba(15,23,42,.45);display:none;align-items:center;justify-content:center;z-index:70;padding:16px}
+.modal.show{display:flex}
+.sheet{background:#fff;border-radius:14px;width:100%;max-width:620px;max-height:88vh;display:flex;flex-direction:column;box-shadow:0 12px 40px rgba(0,0,0,.3)}
+.mhead{display:flex;align-items:center;justify-content:space-between;padding:13px 16px;border-bottom:1px solid var(--line)}
+.mhead b{font-size:15px}
+.mhead button{border:0;background:transparent;font-size:18px;cursor:pointer;color:var(--mut)}
+.mdesc{margin:12px 16px 8px;font-size:12.5px;color:var(--mut)}
+.mta{margin:0 16px;flex:1;min-height:200px;border:1px solid var(--line);border-radius:9px;padding:10px;font:12px/1.4 ui-monospace,SFMono-Regular,Menlo,monospace;resize:vertical;color:var(--ink);background:#fafbfc}
+.mfoot{display:flex;gap:8px;justify-content:flex-end;padding:13px 16px}
+.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn.primary:hover{filter:brightness(1.05);background:var(--accent)}
+@media(max-width:560px){.tm .nm{font-size:12px}.match{gap:4px}.score input{width:30px;height:30px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+ <h1>⚽ Prode Mundial 2026</h1>
+ <div class="sub">Marcador exacto · prodes ilimitados · asistencia de IA por copiar/pegar</div>
+ <div class="prodebar" id="prodebar"></div>
+ <div class="row" style="justify-content:space-between;margin-top:4px">
+  <div class="row">
+   <button class="btn ghost" onclick="cloneProde()" title="Crear un clon del prode activo">⧉ Duplicar</button>
+   <button class="btn" onclick="renameProde()" title="Renombrar el prode activo">✎ Renombrar</button>
+   <button class="btn danger" onclick="deleteProde()" title="Borrar el prode activo">🗑</button>
+  </div>
+ </div>
+ <div class="row" style="margin-top:6px">
+   <button class="btn ai sm" onclick="openPrompt('all')" title="Generar prompt para que una IA complete todo">🤖 Prompt IA (torneo)</button>
+   <button class="btn ai sm" onclick="openPaste()" title="Pegar la respuesta de la IA">📥 Pegar respuesta IA</button>
+   <button class="btn sm" onclick="exportJSON()" title="Descargar todos los prodes como JSON">⬇ Exportar</button>
+   <button class="btn sm" onclick="document.getElementById('importFile').click()" title="Cargar prodes desde un archivo JSON">⬆ Importar</button>
+   <input type="file" id="importFile" accept="application/json,.json" style="display:none" onchange="importJSON(this)">
+ </div>
+ <div class="bar"><i id="prog" style="width:0%"></i></div>
+ <div class="row" style="justify-content:space-between;font-size:11.5px;color:var(--mut)">
+   <span id="progtxt">0 / 104 cargados</span>
+   <span id="savebadge" style="font-weight:600"></span>
+ </div>
+ <div class="navchips" id="nav"></div>
+</header>
+
+<div id="groups" class="section"></div>
+<div id="knock" class="section knock"></div>
+
+<div class="foot">Datos: fixture oficial Mundial FIFA 2026 (104 partidos). Las sugerencias de IA son estimaciones. Se guarda solo en este dispositivo (localStorage); usá Exportar para respaldar.</div>
+</div>
+
+<div class="modal" id="modal">
+ <div class="sheet">
+   <div class="mhead"><b id="mtitle"></b><button onclick="closeModal()">✕</button></div>
+   <p class="mdesc" id="mdesc"></p>
+   <textarea class="mta" id="mta" spellcheck="false"></textarea>
+   <div class="mfoot" id="mfoot"></div>
+ </div>
+</div>
+<div class="modal" id="imodal">
+ <div class="sheet" style="max-width:430px">
+   <div class="mhead"><b id="ititle"></b><button onclick="iAbort()">✕</button></div>
+   <p class="mdesc" id="idesc" style="display:none"></p>
+   <input class="iinput" id="iinput" spellcheck="false">
+   <div class="mfoot" id="ifoot"></div>
+ </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const MATCHES = [{"id": 104456, "stage": "group", "group": "A", "md": 1, "date": "2026-06-11", "time": "19:00", "h": "México", "hf": "🇲🇽", "a": "Sudáfrica", "af": "🇿🇦", "hen": "Mexico", "aen": "South Africa", "city": "Mexico City", "stadium": "Estadio Banorte"}, {"id": 165651, "stage": "group", "group": "A", "md": 1, "date": "2026-06-12", "time": "02:00", "h": "Corea del Sur", "hf": "🇰🇷", "a": "Rep. Checa", "af": "🇨🇿", "hen": "South Korea", "aen": "Czech Republic", "city": "Zapopan", "stadium": "Estadio Akron"}, {"id": 165652, "stage": "group", "group": "B", "md": 1, "date": "2026-06-12", "time": "19:00", "h": "Canadá", "hf": "🇨🇦", "a": "Bosnia", "af": "🇧🇦", "hen": "Canada", "aen": "Bosnia & Herzegovina", "city": "Toronto", "stadium": "BMO Field"}, {"id": 104457, "stage": "group", "group": "D", "md": 1, "date": "2026-06-13", "time": "01:00", "h": "EE.UU.", "hf": "🇺🇸", "a": "Paraguay", "af": "🇵🇾", "hen": "USA", "aen": "Paraguay", "city": "Inglewood, California", "stadium": "SoFi Stadium"}, {"id": 104460, "stage": "group", "group": "B", "md": 1, "date": "2026-06-13", "time": "19:00", "h": "Qatar", "hf": "🇶🇦", "a": "Suiza", "af": "🇨🇭", "hen": "Qatar", "aen": "Switzerland", "city": "", "stadium": ""}, {"id": 104458, "stage": "group", "group": "C", "md": 1, "date": "2026-06-13", "time": "22:00", "h": "Brasil", "hf": "🇧🇷", "a": "Marruecos", "af": "🇲🇦", "hen": "Brazil", "aen": "Morocco", "city": "East Rutherford, New Jersey", "stadium": "MetLife Stadium"}, {"id": 104459, "stage": "group", "group": "C", "md": 1, "date": "2026-06-14", "time": "01:00", "h": "Haití", "hf": "🇭🇹", "a": "Escocia", "af": "🏴󠁧󠁢󠁳󠁣󠁴󠁿", "hen": "Haiti", "aen": "Scotland", "city": "Foxborough", "stadium": "Gillette Stadium"}, {"id": 165653, "stage": "group", "group": "D", "md": 1, "date": "2026-06-14", "time": "04:00", "h": "Australia", "hf": "🇦🇺", "a": "Turquía", "af": "🇹🇷", "hen": "Australia", "aen": "Türkiye", "city": "Vancouver", "stadium": "BC Place"}, {"id": 104461, "stage": "group", "group": "E", "md": 1, "date": "2026-06-14", "time": "17:00", "h": "Alemania", "hf": "🇩🇪", "a": "Curaçao", "af": "🇨🇼", "hen": "Germany", "aen": "Curaçao", "city": "Houston, Texas", "stadium": "NRG Stadium"}, {"id": 104463, "stage": "group", "group": "F", "md": 1, "date": "2026-06-14", "time": "20:00", "h": "Países Bajos", "hf": "🇳🇱", "a": "Japón", "af": "🇯🇵", "hen": "Netherlands", "aen": "Japan", "city": "", "stadium": ""}, {"id": 104462, "stage": "group", "group": "E", "md": 1, "date": "2026-06-14", "time": "23:00", "h": "Costa de Marfil", "hf": "🇨🇮", "a": "Ecuador", "af": "🇪🇨", "hen": "Ivory Coast", "aen": "Ecuador", "city": "Philadelphia, Pennsylvania", "stadium": "Lincoln Financial Field"}, {"id": 165654, "stage": "group", "group": "F", "md": 1, "date": "2026-06-15", "time": "02:00", "h": "Suecia", "hf": "🇸🇪", "a": "Túnez", "af": "🇹🇳", "hen": "Sweden", "aen": "Tunisia", "city": "Monterrey", "stadium": "Estadio BBVA"}, {"id": 104467, "stage": "group", "group": "H", "md": 1, "date": "2026-06-15", "time": "16:00", "h": "España", "hf": "🇪🇸", "a": "Cabo Verde", "af": "🇨🇻", "hen": "Spain", "aen": "Cape Verde Islands", "city": "Atlanta", "stadium": "Mercedes-Benz Stadium"}, {"id": 104464, "stage": "group", "group": "G", "md": 1, "date": "2026-06-15", "time": "19:00", "h": "Bélgica", "hf": "🇧🇪", "a": "Egipto", "af": "🇪🇬", "hen": "Belgium", "aen": "Egypt", "city": "Seattle", "stadium": "Lumen Field"}, {"id": 104466, "stage": "group", "group": "H", "md": 1, "date": "2026-06-15", "time": "22:00", "h": "Arabia Saudita", "hf": "🇸🇦", "a": "Uruguay", "af": "🇺🇾", "hen": "Saudi Arabia", "aen": "Uruguay", "city": "Miami Gardens, Florida", "stadium": "Hard Rock Stadium"}, {"id": 104465, "stage": "group", "group": "G", "md": 1, "date": "2026-06-16", "time": "01:00", "h": "Irán", "hf": "🇮🇷", "a": "Nueva Zelanda", "af": "🇳🇿", "hen": "Iran", "aen": "New Zealand", "city": "Inglewood, California", "stadium": "SoFi Stadium"}, {"id": 104470, "stage": "group", "group": "I", "md": 1, "date": "2026-06-16", "time": "19:00", "h": "Francia", "hf": "🇫🇷", "a": "Senegal", "af": "🇸🇳", "hen": "France", "aen": "Senegal", "city": "East Rutherford, New Jersey", "stadium": "MetLife Stadium"}, {"id": 165655, "stage": "group", "group": "I", "md": 1, "date": "2026-06-16", "time": "22:00", "h": "Iraq", "hf": "🇮🇶", "a": "Noruega", "af": "🇳🇴", "hen": "Iraq", "aen": "Norway", "city": "Foxborough", "stadium": "Gillette Stadium"}, {"id": 104468, "stage": "group", "group": "J", "md": 1, "date": "2026-06-17", "time": "01:00", "h": "Argentina", "hf": "🇦🇷", "a": "Argelia", "af": "🇩🇿", "hen": "Argentina", "aen": "Algeria", "city": "Kansas City, Missouri", "stadium": "Arrowhead Stadium"}, {"id": 104469, "stage": "group", "group": "J", "md": 1, "date": "2026-06-17", "time": "04:00", "h": "Austria", "hf": "🇦🇹", "a": "Jordania", "af": "🇯🇴", "hen": "Austria", "aen": "Jordan", "city": "", "stadium": ""}, {"id": 165656, "stage": "group", "group": "K", "md": 1, "date": "2026-06-17", "time": "17:00", "h": "Portugal", "hf": "🇵🇹", "a": "RD Congo", "af": "🇨🇩", "hen": "Portugal", "aen": "Congo DR", "city": "Houston, Texas", "stadium": "NRG Stadium"}, {"id": 104471, "stage": "group", "group": "L", "md": 1, "date": "2026-06-17", "time": "20:00", "h": "Inglaterra", "hf": "🏴󠁧󠁢󠁥󠁮󠁧󠁿", "a": "Croacia", "af": "🇭🇷", "hen": "England", "aen": "Croatia", "city": "", "stadium": ""}, {"id": 104472, "stage": "group", "group": "L", "md": 1, "date": "2026-06-17", "time": "23:00", "h": "Ghana", "hf": "🇬🇭", "a": "Panamá", "af": "🇵🇦", "hen": "Ghana", "aen": "Panama", "city": "Toronto", "stadium": "BMO Field"}, {"id": 104473, "stage": "group", "group": "K", "md": 1, "date": "2026-06-18", "time": "02:00", "h": "Uzbekistán", "hf": "🇺🇿", "a": "Colombia", "af": "🇨🇴", "hen": "Uzbekistan", "aen": "Colombia", "city": "Mexico City", "stadium": "Estadio Azteca"}, {"id": 165657, "stage": "group", "group": "A", "md": 2, "date": "2026-06-18", "time": "16:00", "h": "Rep. Checa", "hf": "🇨🇿", "a": "Sudáfrica", "af": "🇿🇦", "hen": "Czech Republic", "aen": "South Africa", "city": "Atlanta", "stadium": "Mercedes-Benz Stadium"}, {"id": 165658, "stage": "group", "group": "B", "md": 2, "date": "2026-06-18", "time": "19:00", "h": "Suiza", "hf": "🇨🇭", "a": "Bosnia", "af": "🇧🇦", "hen": "Switzerland", "aen": "Bosnia & Herzegovina", "city": "Inglewood, California", "stadium": "SoFi Stadium"}, {"id": 104474, "stage": "group", "group": "B", "md": 2, "date": "2026-06-18", "time": "22:00", "h": "Canadá", "hf": "🇨🇦", "a": "Qatar", "af": "🇶🇦", "hen": "Canada", "aen": "Qatar", "city": "Vancouver", "stadium": "BC Place"}, {"id": 104475, "stage": "group", "group": "A", "md": 2, "date": "2026-06-19", "time": "01:00", "h": "México", "hf": "🇲🇽", "a": "Corea del Sur", "af": "🇰🇷", "hen": "Mexico", "aen": "South Korea", "city": "Zapopan", "stadium": "Estadio Akron"}, {"id": 104478, "stage": "group", "group": "D", "md": 2, "date": "2026-06-19", "time": "19:00", "h": "EE.UU.", "hf": "🇺🇸", "a": "Australia", "af": "🇦🇺", "hen": "USA", "aen": "Australia", "city": "Seattle", "stadium": "Lumen Field"}, {"id": 104477, "stage": "group", "group": "C", "md": 2, "date": "2026-06-19", "time": "22:00", "h": "Escocia", "hf": "🏴󠁧󠁢󠁳󠁣󠁴󠁿", "a": "Marruecos", "af": "🇲🇦", "hen": "Scotland", "aen": "Morocco", "city": "Foxborough", "stadium": "Gillette Stadium"}, {"id": 104476, "stage": "group", "group": "C", "md": 2, "date": "2026-06-20", "time": "00:30", "h": "Brasil", "hf": "🇧🇷", "a": "Haití", "af": "🇭🇹", "hen": "Brazil", "aen": "Haiti", "city": "Philadelphia, Pennsylvania", "stadium": "Lincoln Financial Field"}, {"id": 165659, "stage": "group", "group": "D", "md": 2, "date": "2026-06-20", "time": "03:00", "h": "Turquía", "hf": "🇹🇷", "a": "Paraguay", "af": "🇵🇾", "hen": "Türkiye", "aen": "Paraguay", "city": "", "stadium": ""}, {"id": 165660, "stage": "group", "group": "F", "md": 2, "date": "2026-06-20", "time": "17:00", "h": "Países Bajos", "hf": "🇳🇱", "a": "Suecia", "af": "🇸🇪", "hen": "Netherlands", "aen": "Sweden", "city": "Houston, Texas", "stadium": "NRG Stadium"}, {"id": 104480, "stage": "group", "group": "E", "md": 2, "date": "2026-06-20", "time": "20:00", "h": "Alemania", "hf": "🇩🇪", "a": "Costa de Marfil", "af": "🇨🇮", "hen": "Germany", "aen": "Ivory Coast", "city": "Toronto", "stadium": "BMO Field"}, {"id": 104479, "stage": "group", "group": "E", "md": 2, "date": "2026-06-21", "time": "00:00", "h": "Ecuador", "hf": "🇪🇨", "a": "Curaçao", "af": "🇨🇼", "hen": "Ecuador", "aen": "Curaçao", "city": "Kansas City, Missouri", "stadium": "Arrowhead Stadium"}, {"id": 104481, "stage": "group", "group": "F", "md": 2, "date": "2026-06-21", "time": "04:00", "h": "Túnez", "hf": "🇹🇳", "a": "Japón", "af": "🇯🇵", "hen": "Tunisia", "aen": "Japan", "city": "Monterrey", "stadium": "Estadio BBVA"}, {"id": 104484, "stage": "group", "group": "H", "md": 2, "date": "2026-06-21", "time": "16:00", "h": "España", "hf": "🇪🇸", "a": "Arabia Saudita", "af": "🇸🇦", "hen": "Spain", "aen": "Saudi Arabia", "city": "Atlanta", "stadium": "Mercedes-Benz Stadium"}, {"id": 104482, "stage": "group", "group": "G", "md": 2, "date": "2026-06-21", "time": "19:00", "h": "Bélgica", "hf": "🇧🇪", "a": "Irán", "af": "🇮🇷", "hen": "Belgium", "aen": "Iran", "city": "Inglewood, California", "stadium": "SoFi Stadium"}, {"id": 104485, "stage": "group", "group": "H", "md": 2, "date": "2026-06-21", "time": "22:00", "h": "Uruguay", "hf": "🇺🇾", "a": "Cabo Verde", "af": "🇨🇻", "hen": "Uruguay", "aen": "Cape Verde Islands", "city": "Miami Gardens, Florida", "stadium": "Hard Rock Stadium"}, {"id": 104483, "stage": "group", "group": "G", "md": 2, "date": "2026-06-22", "time": "01:00", "h": "Nueva Zelanda", "hf": "🇳🇿", "a": "Egipto", "af": "🇪🇬", "hen": "New Zealand", "aen": "Egypt", "city": "Vancouver", "stadium": "BC Place"}, {"id": 104486, "stage": "group", "group": "J", "md": 2, "date": "2026-06-22", "time": "17:00", "h": "Argentina", "hf": "🇦🇷", "a": "Austria", "af": "🇦🇹", "hen": "Argentina", "aen": "Austria", "city": "", "stadium": ""}, {"id": 165661, "stage": "group", "group": "I", "md": 2, "date": "2026-06-22", "time": "21:00", "h": "Francia", "hf": "🇫🇷", "a": "Iraq", "af": "🇮🇶", "hen": "France", "aen": "Iraq", "city": "Philadelphia, Pennsylvania", "stadium": "Lincoln Financial Field"}, {"id": 104488, "stage": "group", "group": "I", "md": 2, "date": "2026-06-23", "time": "00:00", "h": "Noruega", "hf": "🇳🇴", "a": "Senegal", "af": "🇸🇳", "hen": "Norway", "aen": "Senegal", "city": "East Rutherford, New Jersey", "stadium": "MetLife Stadium"}, {"id": 104487, "stage": "group", "group": "J", "md": 2, "date": "2026-06-23", "time": "03:00", "h": "Jordania", "hf": "🇯🇴", "a": "Argelia", "af": "🇩🇿", "hen": "Jordan", "aen": "Algeria", "city": "", "stadium": ""}, {"id": 104491, "stage": "group", "group": "K", "md": 2, "date": "2026-06-23", "time": "17:00", "h": "Portugal", "hf": "🇵🇹", "a": "Uzbekistán", "af": "🇺🇿", "hen": "Portugal", "aen": "Uzbekistan", "city": "Houston, Texas", "stadium": "NRG Stadium"}, {"id": 104489, "stage": "group", "group": "L", "md": 2, "date": "2026-06-23", "time": "20:00", "h": "Inglaterra", "hf": "🏴󠁧󠁢󠁥󠁮󠁧󠁿", "a": "Ghana", "af": "🇬🇭", "hen": "England", "aen": "Ghana", "city": "Foxborough", "stadium": "Gillette Stadium"}, {"id": 104490, "stage": "group", "group": "L", "md": 2, "date": "2026-06-23", "time": "23:00", "h": "Panamá", "hf": "🇵🇦", "a": "Croacia", "af": "🇭🇷", "hen": "Panama", "aen": "Croatia", "city": "Toronto", "stadium": "BMO Field"}, {"id": 165662, "stage": "group", "group": "K", "md": 2, "date": "2026-06-24", "time": "02:00", "h": "Colombia", "hf": "🇨🇴", "a": "RD Congo", "af": "🇨🇩", "hen": "Colombia", "aen": "Congo DR", "city": "Zapopan", "stadium": "Estadio Akron"}, {"id": 104495, "stage": "group", "group": "B", "md": 3, "date": "2026-06-24", "time": "19:00", "h": "Suiza", "hf": "🇨🇭", "a": "Canadá", "af": "🇨🇦", "hen": "Switzerland", "aen": "Canada", "city": "Vancouver", "stadium": "BC Place"}, {"id": 165663, "stage": "group", "group": "B", "md": 3, "date": "2026-06-24", "time": "19:00", "h": "Bosnia", "hf": "🇧🇦", "a": "Qatar", "af": "🇶🇦", "hen": "Bosnia & Herzegovina", "aen": "Qatar", "city": "Seattle", "stadium": "Lumen Field"}, {"id": 104492, "stage": "group", "group": "C", "md": 3, "date": "2026-06-24", "time": "22:00", "h": "Marruecos", "hf": "🇲🇦", "a": "Haití", "af": "🇭🇹", "hen": "Morocco", "aen": "Haiti", "city": "Atlanta", "stadium": "Mercedes-Benz Stadium"}, {"id": 104493, "stage": "group", "group": "C", "md": 3, "date": "2026-06-24", "time": "22:00", "h": "Escocia", "hf": "🏴󠁧󠁢󠁳󠁣󠁴󠁿", "a": "Brasil", "af": "🇧🇷", "hen": "Scotland", "aen": "Brazil", "city": "Miami Gardens, Florida", "stadium": "Hard Rock Stadium"}, {"id": 104494, "stage": "group", "group": "A", "md": 3, "date": "2026-06-25", "time": "01:00", "h": "Sudáfrica", "hf": "🇿🇦", "a": "Corea del Sur", "af": "🇰🇷", "hen": "South Africa", "aen": "South Korea", "city": "Monterrey", "stadium": "Estadio BBVA"}, {"id": 165664, "stage": "group", "group": "A", "md": 3, "date": "2026-06-25", "time": "01:00", "h": "Rep. Checa", "hf": "🇨🇿", "a": "México", "af": "🇲🇽", "hen": "Czech Republic", "aen": "Mexico", "city": "Mexico City", "stadium": "Estadio Azteca"}, {"id": 104496, "stage": "group", "group": "E", "md": 3, "date": "2026-06-25", "time": "20:00", "h": "Curaçao", "hf": "🇨🇼", "a": "Costa de Marfil", "af": "🇨🇮", "hen": "Curaçao", "aen": "Ivory Coast", "city": "Philadelphia, Pennsylvania", "stadium": "Lincoln Financial Field"}, {"id": 104497, "stage": "group", "group": "E", "md": 3, "date": "2026-06-25", "time": "20:00", "h": "Ecuador", "hf": "🇪🇨", "a": "Alemania", "af": "🇩🇪", "hen": "Ecuador", "aen": "Germany", "city": "East Rutherford, New Jersey", "stadium": "MetLife Stadium"}, {"id": 104499, "stage": "group", "group": "F", "md": 3, "date": "2026-06-25", "time": "23:00", "h": "Túnez", "hf": "🇹🇳", "a": "Países Bajos", "af": "🇳🇱", "hen": "Tunisia", "aen": "Netherlands", "city": "Kansas City, Missouri", "stadium": "Arrowhead Stadium"}, {"id": 165665, "stage": "group", "group": "F", "md": 3, "date": "2026-06-25", "time": "23:00", "h": "Japón", "hf": "🇯🇵", "a": "Suecia", "af": "🇸🇪", "hen": "Japan", "aen": "Sweden", "city": "", "stadium": ""}, {"id": 104498, "stage": "group", "group": "D", "md": 3, "date": "2026-06-26", "time": "02:00", "h": "Paraguay", "hf": "🇵🇾", "a": "Australia", "af": "🇦🇺", "hen": "Paraguay", "aen": "Australia", "city": "", "stadium": ""}, {"id": 165666, "stage": "group", "group": "D", "md": 3, "date": "2026-06-26", "time": "02:00", "h": "Turquía", "hf": "🇹🇷", "a": "EE.UU.", "af": "🇺🇸", "hen": "Türkiye", "aen": "USA", "city": "Inglewood, California", "stadium": "SoFi Stadium"}, {"id": 104503, "stage": "group", "group": "I", "md": 3, "date": "2026-06-26", "time": "19:00", "h": "Noruega", "hf": "🇳🇴", "a": "Francia", "af": "🇫🇷", "hen": "Norway", "aen": "France", "city": "Foxborough", "stadium": "Gillette Stadium"}, {"id": 165667, "stage": "group", "group": "I", "md": 3, "date": "2026-06-26", "time": "19:00", "h": "Senegal", "hf": "🇸🇳", "a": "Iraq", "af": "🇮🇶", "hen": "Senegal", "aen": "Iraq", "city": "Toronto", "stadium": "BMO Field"}, {"id": 104500, "stage": "group", "group": "H", "md": 3, "date": "2026-06-27", "time": "00:00", "h": "Cabo Verde", "hf": "🇨🇻", "a": "Arabia Saudita", "af": "🇸🇦", "hen": "Cape Verde Islands", "aen": "Saudi Arabia", "city": "Houston, Texas", "stadium": "NRG Stadium"}, {"id": 104504, "stage": "group", "group": "H", "md": 3, "date": "2026-06-27", "time": "00:00", "h": "Uruguay", "hf": "🇺🇾", "a": "España", "af": "🇪🇸", "hen": "Uruguay", "aen": "Spain", "city": "Zapopan", "stadium": "Estadio Akron"}, {"id": 104501, "stage": "group", "group": "G", "md": 3, "date": "2026-06-27", "time": "03:00", "h": "Egipto", "hf": "🇪🇬", "a": "Irán", "af": "🇮🇷", "hen": "Egypt", "aen": "Iran", "city": "Seattle", "stadium": "Lumen Field"}, {"id": 104502, "stage": "group", "group": "G", "md": 3, "date": "2026-06-27", "time": "03:00", "h": "Nueva Zelanda", "hf": "🇳🇿", "a": "Bélgica", "af": "🇧🇪", "hen": "New Zealand", "aen": "Belgium", "city": "Vancouver", "stadium": "BC Place"}, {"id": 104507, "stage": "group", "group": "L", "md": 3, "date": "2026-06-27", "time": "21:00", "h": "Croacia", "hf": "🇭🇷", "a": "Ghana", "af": "🇬🇭", "hen": "Croatia", "aen": "Ghana", "city": "Philadelphia, Pennsylvania", "stadium": "Lincoln Financial Field"}, {"id": 104509, "stage": "group", "group": "L", "md": 3, "date": "2026-06-27", "time": "21:00", "h": "Panamá", "hf": "🇵🇦", "a": "Inglaterra", "af": "🏴󠁧󠁢󠁥󠁮󠁧󠁿", "hen": "Panama", "aen": "England", "city": "East Rutherford, New Jersey", "stadium": "MetLife Stadium"}, {"id": 104506, "stage": "group", "group": "K", "md": 3, "date": "2026-06-27", "time": "23:30", "h": "Colombia", "hf": "🇨🇴", "a": "Portugal", "af": "🇵🇹", "hen": "Colombia", "aen": "Portugal", "city": "Miami Gardens, Florida", "stadium": "Hard Rock Stadium"}, {"id": 165668, "stage": "group", "group": "K", "md": 3, "date": "2026-06-27", "time": "23:30", "h": "RD Congo", "hf": "🇨🇩", "a": "Uzbekistán", "af": "🇺🇿", "hen": "Congo DR", "aen": "Uzbekistan", "city": "Atlanta", "stadium": "Mercedes-Benz Stadium"}, {"id": 104505, "stage": "group", "group": "J", "md": 3, "date": "2026-06-28", "time": "02:00", "h": "Argelia", "hf": "🇩🇿", "a": "Austria", "af": "🇦🇹", "hen": "Algeria", "aen": "Austria", "city": "Kansas City, Missouri", "stadium": "Arrowhead Stadium"}, {"id": 104508, "stage": "group", "group": "J", "md": 3, "date": "2026-06-28", "time": "02:00", "h": "Jordania", "hf": "🇯🇴", "a": "Argentina", "af": "🇦🇷", "hen": "Jordan", "aen": "Argentina", "city": "", "stadium": ""}, {"id": 160042, "stage": "ko", "group": "16avos", "md": null, "date": "2026-06-28", "time": "19:00", "h": "", "hf": "", "a": "", "af": "", "hen": "", "aen": "", "label": "16avos #1", "city": "", "stadium": ""}, {"id": 160043, "stage": "ko", "group": "16avos", "md": null, "date": "2026-06-29", "time": "17:00", "h": "", "hf": "", "a": "", "af": "", "hen": "", "aen": "", "label": "16avos #2", "city": "", "stadium": ""}, {"id": 160044, "stage": "ko", "group": "16avos", "md": null, "date": "2026-06-29", "time": "20:30", "h": "", "hf": "", "a": "", "af": "", "hen": "", "aen": "", "label": "16avos #3", "city": "", "stadium": ""}, {"id": 160045, "stage": "ko", "group": "16avos", "md": null, "date": "2026-06-30", "time": "01:00", "h": "", "hf": "", "a": "", "af": "", "hen": "", "aen": "", "label": "16avos #4", "city": "", "stadium": ""}, {"id": 160046, "stage": "ko", "group": "16avos", "md": null, "date": "2026-06-30", "time": "17:00", "h": "", "hf": "", "a": "", "af": "", "hen": "", "aen": "", "label": "16avos #5", "city": "", "stadium": ""}, {"id": 160047, "stage": "ko", "group": "16avos", "md": null, "date": "2026-06-30", "time": "21:00", "h": "", "hf": "", "a": "", "af": "", "hen": "", "aen": "", "label": "16avos #6", "city": "", "stadium": ""}, {"id": 160048, "stage": "ko", "group": "16avos", "md": null, "date": "2026-07-01", "time": "01:00", "h": "", "hf": "", "a": "", "af": "", "hen": "", "aen": "", "label": "16avos #7", "city": "", "stadium": ""}, {"id": 160049, "stage": "ko", "group": "16avos", "md": null, "date": "2026-07-01", "time": "16:00", "h": "", "hf": "", "a": "", "af": "", "hen": "", "aen": "", "label": "16avos #8", "city": "", "stadium": ""}, {"id": 160050, "stage": "ko", "group": "16avos", "md": null, "date": "2026-07-01", "time": "20:00", "h": "", "hf": "", "a": "", "af": "", "hen": "", "aen": "", "label": "16avos #9", "city": "", "stadium": ""}, {"id": 160051, "stage": "ko", "group": "16avos", "md": null, "date": "2026-07-02", "time": "00:00", "h": "", "hf": "", "a": "", "af": "", "hen": "", "aen": "", "label": "16avos #10", "city": "", "stadium": ""}, {"id": 160052, "stage": "ko", "group": "16avos", "md": null, "date": "2026-07-02", "time": "19:00", "h": "", "hf": "", "a": "", "af": "", "hen": "", "aen": "", "label": "16avos #11", "city": "", "stadium": ""}, {"id": 160053, "stage": "ko", "group": "16avos", "md": null, "date": "2026-07-02", "time": "23:00", "h": "", "hf": "", "a": "", "af": "", "hen": "", "aen": "", "label": "16avos #12", "city": "", "stadium": ""}, {"id": 160054, "stage": "ko", "group": "16avos", "md": null, "date": "2026-07-03", "time": "03:00", "h": "", "hf": "", "a": "", "af": "", "hen": "", "aen": "", "label": "16avos #13", "city": "", "stadium": ""}, {"id": 160055, "stage": "ko", "group": "16avos", "md": null, "date": "2026-07-03", "time": "18:00", "h": "", "hf": "", "a": "", "af": "", "hen": "", "aen": "", "label": "16avos #14", "city": "", "stadium": ""}, {"id": 160056, "stage": "ko", "group": "16avos", "md": null, "date": "2026-07-03", "time": "22:00", "h": "", "hf": "", "a": "", "af": "", "hen": "", "aen": "", "label": "16avos #15", "city": "", "stadium": ""}, {"id": 160057, "stage": "ko", "group": "16avos", "md": null, "date": "2026-07-04", "time": "01:30", "h": "", "hf": "", "a": "", "af": "", "hen": "", "aen": "", "label": "16avos #16", "city": "", "stadium": ""}, {"id": 160058, "stage": "ko", "group": "Octavos", "md": null, "date": "2026-07-04", "time": "17:00", "h": "", "hf": "", "a": "", "af": "", "hen": "", "aen": "", "label": "Octavos #1", "city": "", "stadium": ""}, {"id": 160059, "stage": "ko", "group": "Octavos", "md": null, "date": "2026-07-04", "time": "21:00", "h": "", "hf": "", "a": "", "af": "", "hen": "", "aen": "", "label": "Octavos #2", "city": "", "stadium": ""}, {"id": 160060, "stage": "ko", "group": "Octavos", "md": null, "date": "2026-07-05", "time": "20:00", "h": "", "hf": "", "a": "", "af": "", "hen": "", "aen": "", "label": "Octavos #3", "city": "", "stadium": ""}, {"id": 160061, "stage": "ko", "group": "Octavos", "md": null, "date": "2026-07-06", "time": "00:00", "h": "", "hf": "", "a": "", "af": "", "hen": "", "aen": "", "label": "Octavos #4", "city": "", "stadium": ""}, {"id": 160062, "stage": "ko", "group": "Octavos", "md": null, "date": "2026-07-06", "time": "19:00", "h": "", "hf": "", "a": "", "af": "", "hen": "", "aen": "", "label": "Octavos #5", "city": "", "stadium": ""}, {"id": 160063, "stage": "ko", "group": "Octavos", "md": null, "date": "2026-07-07", "time": "00:00", "h": "", "hf": "", "a": "", "af": "", "hen": "", "aen": "", "label": "Octavos #6", "city": "", "stadium": ""}, {"id": 160064, "stage": "ko", "group": "Octavos", "md": null, "date": "2026-07-07", "time": "16:00", "h": "", "hf": "", "a": "", "af": "", "hen": "", "aen": "", "label": "Octavos #7", "city": "", "stadium": ""}, {"id": 160065, "stage": "ko", "group": "Octavos", "md": null, "date": "2026-07-07", "time": "20:00", "h": "", "hf": "", "a": "", "af": "", "hen": "", "aen": "", "label": "Octavos #8", "city": "", "stadium": ""}, {"id": 160066, "stage": "ko", "group": "Cuartos", "md": null, "date": "2026-07-09", "time": "20:00", "h": "", "hf": "", "a": "", "af": "", "hen": "", "aen": "", "label": "Cuartos #1", "city": "", "stadium": ""}, {"id": 160067, "stage": "ko", "group": "Cuartos", "md": null, "date": "2026-07-10", "time": "19:00", "h": "", "hf": "", "a": "", "af": "", "hen": "", "aen": "", "label": "Cuartos #2", "city": "", "stadium": ""}, {"id": 160068, "stage": "ko", "group": "Cuartos", "md": null, "date": "2026-07-11", "time": "21:00", "h": "", "hf": "", "a": "", "af": "", "hen": "", "aen": "", "label": "Cuartos #3", "city": "", "stadium": ""}, {"id": 160069, "stage": "ko", "group": "Cuartos", "md": null, "date": "2026-07-12", "time": "01:00", "h": "", "hf": "", "a": "", "af": "", "hen": "", "aen": "", "label": "Cuartos #4", "city": "", "stadium": ""}, {"id": 160070, "stage": "ko", "group": "Semifinal", "md": null, "date": "2026-07-14", "time": "19:00", "h": "", "hf": "", "a": "", "af": "", "hen": "", "aen": "", "label": "Semifinal #1", "city": "", "stadium": ""}, {"id": 160071, "stage": "ko", "group": "Semifinal", "md": null, "date": "2026-07-15", "time": "19:00", "h": "", "hf": "", "a": "", "af": "", "hen": "", "aen": "", "label": "Semifinal #2", "city": "", "stadium": ""}, {"id": 160072, "stage": "ko", "group": "Tercer puesto", "md": null, "date": "2026-07-18", "time": "21:00", "h": "", "hf": "", "a": "", "af": "", "hen": "", "aen": "", "label": "Tercer puesto #1", "city": "", "stadium": ""}, {"id": 160073, "stage": "ko", "group": "Final", "md": null, "date": "2026-07-19", "time": "19:00", "h": "", "hf": "", "a": "", "af": "", "hen": "", "aen": "", "label": "Final #1", "city": "", "stadium": ""}];
+const PHASES = ["16avos","Octavos","Cuartos","Semifinal","Tercer puesto","Final"];
+const PALETTE = ["#2563eb","#9333ea","#16a34a","#ea580c","#0891b2","#db2777","#ca8a04","#4f46e5","#0d9488","#e11d48"];
+const LS_KEY = "prodeMundial2026_v2";
+let store = load();
+let prode = 0;
+let curView = "A";
+
+let storageOK=false;
+const MARK="PRODEv2|";
+function restore(){
+  try{ const raw=localStorage.getItem(LS_KEY); if(raw){ const o=JSON.parse(raw); if(o&&Array.isArray(o.prodes)&&o.prodes.length) return o; } }catch(e){}
+  try{ if(typeof window!=='undefined' && window.name && window.name.indexOf(MARK)===0){ const o=JSON.parse(window.name.slice(MARK.length)); if(o&&Array.isArray(o.prodes)&&o.prodes.length) return o; } }catch(e){}
+  try{ const old=JSON.parse(localStorage.getItem("prodeMundial2026_v1")||"null"); if(Array.isArray(old)) return { prodes: old.map((p,i)=>({name:"Prode "+(i+1), preds:p||{}})), active:0 }; }catch(e){}
+  return null;
+}
+function load(){ return restore() || { prodes:[{name:"Prode 1",preds:{}},{name:"Prode 2",preds:{}}], active:0 }; }
+function save(){ store.active=prode; const s=JSON.stringify(store); let ok=false;
+  try{ localStorage.setItem(LS_KEY, s); if(localStorage.getItem(LS_KEY)===s) ok=true; }catch(e){}
+  try{ window.name = MARK + s; }catch(e){}
+  storageOK=ok; updateSaveBadge(); refreshProgress(); }
+function updateSaveBadge(){ const b=document.getElementById('savebadge'); if(!b) return;
+  if(storageOK){ b.textContent='💾 Guardado automático'; b.style.color='var(--ok)'; }
+  else { b.textContent='⚠ Este entorno no guarda solo — usá ⬇ Exportar para no perder datos'; b.style.color='#d97706'; } }
+function P(){ return store.prodes[prode].preds; }
+function rec(id){ if(!P()[id]) P()[id]={}; return P()[id]; }
+function colorOf(i){ return PALETTE[i % PALETTE.length]; }
+function applyAccent(){ const c=colorOf(prode); document.documentElement.style.setProperty('--accent',c); document.documentElement.style.setProperty('--c',c); }
+function toast(m){ const t=document.getElementById('toast'); t.textContent=m; t.classList.add('show'); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),2600); }
+function escapeHtml(s){ return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+/* ---------- prodes (CRUD) ---------- */
+function buildProdeBar(){
+  const bar=document.getElementById('prodebar'); bar.innerHTML='';
+  store.prodes.forEach((p,i)=>{
+    const b=document.createElement('button');
+    b.className='pchip'+(i===prode?' active':'');
+    b.style.setProperty('--c',colorOf(i));
+    b.innerHTML=`<span class="dot"></span>${escapeHtml(p.name)}`;
+    b.onclick=()=>setProde(i); b.ondblclick=()=>renameProde();
+    bar.appendChild(b);
+  });
+  const add=document.createElement('button'); add.className='pnew'; add.textContent='＋ Nuevo'; add.onclick=()=>newProde();
+  bar.appendChild(add);
+}
+function setProde(i){ prode=i; save(); applyAccent(); render(); }
+function newProde(){ uiPrompt("Nuevo prode","Nombre:", "Prode "+(store.prodes.length+1), function(name){
+  if(!name) return; store.prodes.push({name, preds:{}}); prode=store.prodes.length-1; save(); applyAccent(); render(); toast("Creado: "+name); }); }
+function cloneProde(){ const base=store.prodes[prode];
+  uiPrompt("Duplicar prode","Nombre del clon:", base.name+" (copia)", function(name){
+    if(!name) return; store.prodes.push({name, preds:JSON.parse(JSON.stringify(base.preds))}); prode=store.prodes.length-1; save(); applyAccent(); render(); toast("Clon creado: "+name); }); }
+function renameProde(){ const cur=store.prodes[prode].name;
+  uiPrompt("Renombrar prode","Nombre:", cur, function(name){
+    if(!name||name===cur) return; store.prodes[prode].name=name; save(); buildProdeBar(); toast("Renombrado"); }); }
+function deleteProde(){ if(store.prodes.length<=1){ toast("Tiene que quedar al menos un prode"); return; }
+  uiConfirm('¿Borrar "'+store.prodes[prode].name+'" y todos sus pronósticos?', function(){
+    store.prodes.splice(prode,1); if(prode>=store.prodes.length) prode=store.prodes.length-1; save(); applyAccent(); render(); toast("Prode borrado");
+  }, null, "Borrar", "Cancelar"); }
+
+/* ---------- export / import ---------- */
+function exportJSON(){
+  store.active=prode;
+  const blob=new Blob([JSON.stringify(store,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob); const a=document.createElement('a');
+  a.href=url; a.download='prode-mundial-2026_'+new Date().toISOString().slice(0,10)+'.json';
+  document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url); toast('Exportado ('+store.prodes.length+' prode/s)');
+}
+function importJSON(input){
+  const f=input.files&&input.files[0]; if(!f){ return; }
+  const r=new FileReader();
+  r.onload=()=>{
+    try{
+      const data=JSON.parse(r.result); let prodes=null;
+      if(data && Array.isArray(data.prodes)) prodes=data.prodes;
+      else if(Array.isArray(data)) prodes=data.map((p,i)=>({name:(p&&p.name)||('Prode '+(i+1)), preds:(p&&p.preds)||p||{}}));
+      if(!prodes||!prodes.length) throw new Error('formato no reconocido');
+      prodes=prodes.map((p,i)=>({name:String((p&&p.name)||('Prode '+(i+1))), preds:(p&&p.preds&&typeof p.preds==='object')?p.preds:{}}));
+      uiConfirm('Importás '+prodes.length+' prode/s. ¿Reemplazar TODOS los actuales, o agregarlos a los que ya tenés?',
+        function(){ store.prodes=prodes; prode=0; save(); applyAccent(); render(); toast('Reemplazado: '+prodes.length+' prode/s'); },
+        function(){ const n=store.prodes.length; store.prodes=store.prodes.concat(prodes); prode=n; save(); applyAccent(); render(); toast('Agregados: '+prodes.length+' prode/s'); },
+        "Reemplazar todo", "Agregar");
+    }catch(e){ console.error(e); toast('Archivo inválido: '+e.message); }
+    input.value='';
+  };
+  r.readAsText(f);
+}
+
+/* ================= IA por copiar / pegar ================= */
+function matchLabel(m){
+  if(m.stage==='group') return m.hen+' vs '+m.aen;
+  const r=P()[m.id]||{}; return (r.ht||m.label+' local')+' vs '+(r.at||'visitante');
+}
+function collectForPrompt(scope){
+  if(scope==='all') return MATCHES.filter(m=>m.stage==='group');
+  if(scope.length===1) return MATCHES.filter(m=>m.stage==='group'&&m.group===scope);
+  if(scope[0]==='m'){ const id=+scope.slice(1); return MATCHES.filter(m=>m.id===id); }
+  return [];
+}
+function buildPrompt(scope){
+  const ms=collectForPrompt(scope);
+  const lines=ms.map(m=>`id ${m.id}: ${matchLabel(m)}`).join('\n');
+  const titulo = scope==='all' ? 'todos los partidos de la fase de grupos del Mundial 2026'
+              : scope.length===1 ? 'los partidos del Grupo '+scope+' del Mundial 2026'
+              : 'este partido del Mundial 2026';
+  return `Sos analista de fútbol. Predecí el MARCADOR EXACTO más probable de ${titulo}, considerando ranking FIFA, planteles y forma reciente.\n`+
+         `Devolvé ÚNICAMENTE un JSON array (sin texto extra, sin markdown), un objeto por partido, respetando el "id":\n`+
+         `[{"id":${ms[0]?ms[0].id:123},"hs":2,"as":1}]\n\n`+
+         `Partidos:\n${lines}`;
+}
+let pasteMode=false;
+function openPrompt(scope){
+  pasteMode=false;
+  document.getElementById('mtitle').textContent='Prompt para una IA';
+  document.getElementById('mdesc').innerHTML='Copiá este texto y pegáselo a <b>Claude Code</b> o cualquier IA. Cuando te devuelva el JSON, volvé y tocá <b>📥 Pegar respuesta IA</b>.';
+  const ta=document.getElementById('mta'); ta.value=buildPrompt(scope); ta.readOnly=true;
+  document.getElementById('mfoot').innerHTML='<button class="btn" onclick="closeModal()">Cerrar</button><button class="btn primary" onclick="copyTA()">📋 Copiar</button>';
+  document.getElementById('modal').classList.add('show');
+  setTimeout(()=>{ta.focus();ta.select();},50);
+}
+function openPaste(){
+  pasteMode=true;
+  document.getElementById('mtitle').textContent='Pegar respuesta de la IA';
+  document.getElementById('mdesc').innerHTML='Pegá acá el JSON que te devolvió la IA. Se aplican los marcadores al prode activo: <b>'+escapeHtml(store.prodes[prode].name)+'</b>. Acepta tanto <code>[{"id":..,"hs":..,"as":..}]</code> como <code>{"id":{"hs":..,"as":..}}</code>.';
+  const ta=document.getElementById('mta'); ta.value=''; ta.readOnly=false; ta.placeholder='[{"id":104456,"hs":2,"as":0}, ...]';
+  document.getElementById('mfoot').innerHTML='<button class="btn" onclick="closeModal()">Cancelar</button><button class="btn primary" onclick="applyPaste()">✓ Aplicar</button>';
+  document.getElementById('modal').classList.add('show');
+  setTimeout(()=>document.getElementById('mta').focus(),50);
+}
+function closeModal(){ document.getElementById('modal').classList.remove('show'); }
+function copyTA(){
+  const ta=document.getElementById('mta'); ta.select();
+  try{ if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(ta.value); } else { document.execCommand('copy'); } toast('Copiado ✓'); }
+  catch(e){ document.execCommand && document.execCommand('copy'); toast('Seleccionado: copiá con Ctrl/Cmd+C'); }
+}
+function parseJSON(s){
+  if(typeof s!=='string') s=JSON.stringify(s);
+  let m=s.match(/```(?:json)?\s*([\s\S]*?)```/); if(m) s=m[1];
+  const a=s.indexOf('{'), b=s.lastIndexOf('}'); const c=s.indexOf('['), d=s.lastIndexOf(']');
+  let cand = (c!==-1 && (c<a || a===-1)) ? s.slice(c,d+1) : s.slice(a,b+1);
+  return JSON.parse(cand);
+}
+function applyPaste(){
+  const raw=document.getElementById('mta').value.trim();
+  if(!raw){ toast('Pegá algo primero'); return; }
+  let data; try{ data=parseJSON(raw); }catch(e){ toast('JSON inválido: '+e.message); return; }
+  let items=[];
+  if(Array.isArray(data)) items=data;
+  else if(data && typeof data==='object'){ items=Object.keys(data).map(k=>Object.assign({id:k}, data[k])); }
+  let n=0;
+  items.forEach(o=>{
+    const id=+o.id; const m=MATCHES.find(x=>x.id===id); if(!m) return;
+    if(o.hs!=null) rec(id).hs=Math.max(0,parseInt(o.hs)||0);
+    if(o.as!=null) rec(id).as=Math.max(0,parseInt(o.as)||0);
+    if(o.ht!=null) rec(id).ht=String(o.ht);
+    if(o.at!=null) rec(id).at=String(o.at);
+    n++;
+  });
+  save(); render(); closeModal(); toast(n>0?('✓ Aplicados '+n+' partidos'):'No coincidió ningún id');
+}
+
+/* ---------- progress ---------- */
+function refreshProgress(){
+  let done=0;
+  MATCHES.forEach(m=>{ const r=P()[m.id]; if(r && r.hs!=null && r.hs!=='' && r.as!=null && r.as!=='') done++; });
+  const pct=Math.round(done/MATCHES.length*100);
+  document.getElementById('prog').style.width=pct+'%';
+  document.getElementById('progtxt').textContent=done+' / '+MATCHES.length+' cargados';
+  document.querySelectorAll('.chip').forEach(c=>{ const v=c.dataset.v; const ms=matchesOf(v);
+    const ok=ms.length>0 && ms.every(m=>{const r=P()[m.id]; return r&&r.hs!==''&&r.hs!=null&&r.as!==''&&r.as!=null;});
+    c.classList.toggle('done', ok); });
+}
+function matchesOf(v){ if(v.length===1) return MATCHES.filter(m=>m.stage==='group'&&m.group===v);
+  return MATCHES.filter(m=>m.stage==='ko'&&m.group===v); }
+
+/* ---------- nav ---------- */
+function buildNav(){ const nav=document.getElementById('nav'); nav.innerHTML='';
+  "ABCDEFGHIJKL".split('').forEach(g=>nav.appendChild(chip(g,'Grupo '+g)));
+  PHASES.forEach(p=>nav.appendChild(chip(p,p))); }
+function chip(v,label){ const b=document.createElement('button'); b.className='chip'; b.dataset.v=v; b.textContent=label; b.onclick=()=>{ curView=v; render(); }; return b; }
+
+/* ---------- render ---------- */
+function render(){
+  buildProdeBar();
+  document.querySelectorAll('.chip').forEach(c=>c.classList.toggle('on', c.dataset.v===curView));
+  const isGroup = curView.length===1;
+  document.getElementById('groups').style.display=isGroup?'block':'none';
+  document.getElementById('knock').style.display=isGroup?'none':'block';
+  if(isGroup) renderGroup(curView); else renderKO(curView);
+  refreshProgress();
+}
+function teamCell(side,m){ const nm = side==='h'?m.h:m.a, fl = side==='h'?m.hf:m.af;
+  return `<div class="tm ${side==='h'?'home':'away'}">`+
+   (side==='h'? `<span class="nm">${nm}</span><span class="fl">${fl}</span>` : `<span class="fl">${fl}</span><span class="nm">${nm}</span>`)+`</div>`; }
+function scoreCell(m){ const r=P()[m.id]||{};
+  return `<div class="score">
+    <input type="number" min="0" max="20" inputmode="numeric" value="${r.hs??''}" onchange="setScore(${m.id},'hs',this.value)" aria-label="goles local">
+    <span class="x">:</span>
+    <input type="number" min="0" max="20" inputmode="numeric" value="${r.as??''}" onchange="setScore(${m.id},'as',this.value)" aria-label="goles visitante">
+   </div>`; }
+function renderGroup(g){
+  const ms=MATCHES.filter(m=>m.stage==='group'&&m.group===g);
+  const el=document.getElementById('groups');
+  el.innerHTML=`<div class="gcard">
+    <div class="ghead">
+      <div class="gtitle"><span class="gletter">${g}</span> Grupo ${g}</div>
+      <button class="btn ai sm" onclick="openPrompt('${g}')" title="Prompt para que una IA complete este grupo">🤖 Prompt grupo</button>
+    </div>
+    <div id="ml-${g}">${ms.map(m=>matchRow(m)).join('')}</div>
+    ${standingsTable(g,ms)}
+    <div class="legend"><span><i></i>Clasifican (top 2 + mejores terceros)</span></div>
+  </div>`;
+}
+function matchRow(m){
+  return `<div class="match">
+    ${teamCell('h',m)} ${scoreCell(m)} ${teamCell('a',m)}
+    <button class="mxai" title="Prompt IA de este partido" onclick="openPrompt('m${m.id}')">🤖</button>
+    <div class="meta">J${m.md} · ${fmtDate(m.date)} ${m.time}${m.stadium?' · '+m.stadium:''}</div>
+  </div>`;
+}
+function fmtDate(d){ const p=d.split('-'); return p[2]+'/'+p[1]; }
+
+/* ---------- standings ---------- */
+function standingsTable(g,ms){
+  const teams={};
+  MATCHES.filter(m=>m.stage==='group'&&m.group===g).forEach(m=>{
+    teams[m.h]=teams[m.h]||{n:m.h,f:m.hf,pj:0,g:0,e:0,p:0,gf:0,gc:0,pts:0};
+    teams[m.a]=teams[m.a]||{n:m.a,f:m.af,pj:0,g:0,e:0,p:0,gf:0,gc:0,pts:0};
+  });
+  ms.forEach(m=>{ const r=P()[m.id]; if(!r||r.hs===''||r.hs==null||r.as===''||r.as==null) return;
+    const hs=+r.hs, as=+r.as, H=teams[m.h], A=teams[m.a];
+    H.pj++;A.pj++;H.gf+=hs;H.gc+=as;A.gf+=as;A.gc+=hs;
+    if(hs>as){H.g++;A.p++;H.pts+=3;} else if(hs<as){A.g++;H.p++;A.pts+=3;} else {H.e++;A.e++;H.pts++;A.pts++;}
+  });
+  const arr=Object.values(teams).sort((a,b)=>b.pts-a.pts || (b.gf-b.gc)-(a.gf-a.gc) || b.gf-a.gf || a.n.localeCompare(b.n));
+  return `<table class="stand"><thead><tr>
+     <th>Equipo</th><th>PJ</th><th>G</th><th>E</th><th>P</th><th>GF</th><th>GC</th><th>DG</th><th>Pts</th></tr></thead><tbody>
+     ${arr.map((t,i)=>`<tr class="${i<2?'q':''}">
+       <td><span class="pos">${i+1}</span> ${t.f} ${t.n}</td>
+       <td>${t.pj}</td><td>${t.g}</td><td>${t.e}</td><td>${t.p}</td>
+       <td>${t.gf}</td><td>${t.gc}</td><td>${t.gf-t.gc>0?'+':''}${t.gf-t.gc}</td><td><b>${t.pts}</b></td></tr>`).join('')}
+   </tbody></table>`;
+}
+
+/* ---------- knockout ---------- */
+function renderKO(ph){
+  const ms=MATCHES.filter(m=>m.stage==='ko'&&m.group===ph);
+  const el=document.getElementById('knock');
+  el.innerHTML=`<div class="gcard">
+    <div class="ghead">
+      <div class="gtitle"><span class="gletter">🏆</span> ${ph}</div>
+      <span style="font-size:11.5px;color:var(--mut)">Escribí los equipos clasificados y el marcador</span>
+    </div>
+    ${ms.map(m=>koRow(m)).join('')}
+    <div class="aihint">Tip: completá los equipos y después usá 🤖 en cada partido para pedirle el marcador a una IA.</div>
+  </div>`;
+}
+function koRow(m){
+  const r=P()[m.id]||{};
+  return `<div class="match">
+    <div class="kteam"><div class="klabel">${m.label} · local</div>
+      <input class="tn" value="${escapeHtml(r.ht??'')}" placeholder="Equipo" onchange="setScore(${m.id},'ht',this.value)"></div>
+    ${scoreCell(m)}
+    <div class="kteam"><div class="klabel">visitante</div>
+      <input class="tn" value="${escapeHtml(r.at??'')}" placeholder="Equipo" onchange="setScore(${m.id},'at',this.value)"></div>
+    <button class="mxai" title="Prompt IA de este partido" onclick="openPrompt('m${m.id}')">🤖</button>
+    <div class="meta">${fmtDate(m.date)} ${m.time}</div>
+  </div>`;
+}
+
+/* ---------- edits ---------- */
+function setScore(id,k,v){ rec(id)[k]=v; save();
+  const m=MATCHES.find(x=>x.id===id); if(m && m.stage==='group') renderGroup(m.group); }
+
+/* ---------- modal de entrada propio (prompt/confirm no andan en el sandbox) ---------- */
+function iAbort(){ document.getElementById('imodal').classList.remove('show'); }
+function uiPrompt(title, label, def, cb){
+  document.getElementById('ititle').textContent=title;
+  const d=document.getElementById('idesc'); d.style.display=label?'block':'none'; d.textContent=label||'';
+  const inp=document.getElementById('iinput'); inp.style.display=''; inp.value=def||'';
+  const foot=document.getElementById('ifoot');
+  foot.innerHTML='';
+  const cancel=document.createElement('button'); cancel.className='btn'; cancel.textContent='Cancelar'; cancel.onclick=iAbort;
+  const ok=document.createElement('button'); ok.className='btn primary'; ok.textContent='Aceptar';
+  const go=()=>{ const v=inp.value.trim(); iAbort(); cb(v); };
+  ok.onclick=go; inp.onkeydown=e=>{ if(e.key==='Enter'){ e.preventDefault(); go(); } if(e.key==='Escape') iAbort(); };
+  foot.appendChild(cancel); foot.appendChild(ok);
+  document.getElementById('imodal').classList.add('show');
+  setTimeout(()=>{ inp.focus(); inp.select(); },50);
+}
+function uiConfirm(msg, onYes, onNo, yesLabel, noLabel){
+  document.getElementById('ititle').textContent='Confirmar';
+  const d=document.getElementById('idesc'); d.style.display='block'; d.textContent=msg;
+  document.getElementById('iinput').style.display='none';
+  const foot=document.getElementById('ifoot'); foot.innerHTML='';
+  const no=document.createElement('button'); no.className='btn'; no.textContent=noLabel||'No'; no.onclick=()=>{ iAbort(); if(onNo) onNo(); };
+  const yes=document.createElement('button'); yes.className='btn primary'; yes.textContent=yesLabel||'Sí'; yes.onclick=()=>{ iAbort(); if(onYes) onYes(); };
+  foot.appendChild(no); foot.appendChild(yes);
+  document.getElementById('imodal').classList.add('show');
+}
+
+/* ---------- init ---------- */
+prode = Math.min(store.active||0, store.prodes.length-1);
+applyAccent(); buildNav(); render(); save(); updateSaveBadge();
+document.getElementById('modal').addEventListener('click',e=>{ if(e.target.id==='modal') closeModal(); });
+document.getElementById('imodal').addEventListener('click',e=>{ if(e.target.id==='imodal') iAbort(); });
+</script>
+</body>
+</html>
