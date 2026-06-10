@@ -16,6 +16,8 @@ header{position:sticky;top:0;z-index:30;background:var(--bg);padding-top:10px;bo
 h1{font-size:20px;margin:0 0 2px;display:flex;align-items:center;gap:8px}
 .sub{color:var(--mut);font-size:12.5px;margin-bottom:10px}
 .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.globaltools{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0 6px;padding:8px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.gtag{font-size:11.5px;font-weight:800;color:var(--mut);text-transform:uppercase;letter-spacing:0}
 .prodebar{display:flex;gap:6px;overflow-x:auto;padding:4px 2px 6px;-webkit-overflow-scrolling:touch}
 .pchip{flex:none;border:1.5px solid var(--line);background:#fff;padding:7px 13px;border-radius:11px;font-weight:700;cursor:pointer;font-size:13.5px;color:var(--mut);display:flex;align-items:center;gap:7px;transition:.12s}
 .pchip .dot{width:9px;height:9px;border-radius:50%;background:var(--c);flex:none}
@@ -115,6 +117,12 @@ table.stand{width:100%;border-collapse:collapse;margin-top:10px;font-size:12px}
 <header>
  <h1>⚽ Prode Mundial 2026</h1>
  <div class="sub">Marcador exacto · prodes ilimitados · asistencia de IA por copiar/pegar</div>
+ <div class="globaltools">
+   <span class="gtag">Global</span>
+   <button class="btn sm" onclick="backupJSON()" title="Descargar una copia de seguridad con todos los prodes">⬇ Copia de seguridad</button>
+   <button class="btn sm" onclick="document.getElementById('restoreFile').click()" title="Restaurar todos los prodes desde una copia de seguridad JSON">⬆ Restaurar todo</button>
+   <input type="file" id="restoreFile" accept="application/json,.json" style="display:none" onchange="restoreBackup(this)">
+ </div>
  <div class="prodebar" id="prodebar"></div>
  <div class="row" style="justify-content:space-between;margin-top:4px">
   <div class="row">
@@ -126,8 +134,8 @@ table.stand{width:100%;border-collapse:collapse;margin-top:10px;font-size:12px}
  <div class="row" style="margin-top:6px">
    <button class="btn ai sm" onclick="openPrompt('all')" title="Generar prompt para que una IA complete todo">🤖 Prompt IA (torneo)</button>
    <button class="btn ai sm" onclick="openPaste()" title="Pegar la respuesta de la IA">📥 Pegar respuesta IA</button>
-   <button class="btn sm" onclick="exportJSON()" title="Descargar todos los prodes como JSON">⬇ Exportar</button>
-   <button class="btn sm" onclick="document.getElementById('importFile').click()" title="Cargar prodes desde un archivo JSON">⬆ Importar</button>
+   <button class="btn sm" onclick="exportJSON()" title="Descargar solo el prode activo como JSON">⬇ Exportar</button>
+   <button class="btn sm" onclick="document.getElementById('importFile').click()" title="Importar un prode desde un archivo JSON">⬆ Importar</button>
    <input type="file" id="importFile" accept="application/json,.json" style="display:none" onchange="importJSON(this)">
  </div>
  <div class="comparebar" id="comparebar"></div>
@@ -142,7 +150,7 @@ table.stand{width:100%;border-collapse:collapse;margin-top:10px;font-size:12px}
 <div id="groups" class="section"></div>
 <div id="knock" class="section knock"></div>
 
-<div class="foot">Datos: fixture oficial Mundial FIFA 2026 (104 partidos). Las sugerencias de IA son estimaciones. Se guarda solo en este dispositivo (localStorage); usá Exportar para respaldar.</div>
+<div class="foot">Datos: fixture oficial Mundial FIFA 2026 (104 partidos). Las sugerencias de IA son estimaciones. Se guarda solo en este dispositivo (localStorage); usá Copia de seguridad para respaldar.</div>
 </div>
 
 <div class="modal" id="modal">
@@ -215,7 +223,7 @@ function save(){ store.active=prode; const s=JSON.stringify(store); let ok=false
   storageOK=ok; updateSaveBadge(); refreshProgress(); }
 function updateSaveBadge(){ const b=document.getElementById('savebadge'); if(!b) return;
   if(storageOK){ b.textContent='💾 Guardado automático'; b.style.color='var(--ok)'; }
-  else { b.textContent='⚠ Este entorno no guarda solo — usá ⬇ Exportar para no perder datos'; b.style.color='#d97706'; } }
+  else { b.textContent='⚠ Este entorno no guarda solo — usá ⬇ Copia de seguridad para no perder datos'; b.style.color='#d97706'; } }
 function P(){ return store.prodes[prode].preds; }
 function rec(id){ if(!P()[id]) P()[id]={}; return P()[id]; }
 function colorOf(i){ return PALETTE[i % PALETTE.length]; }
@@ -289,29 +297,66 @@ function deleteProde(){ if(store.prodes.length<=1){ toast("Tiene que quedar al m
     if(prode>=store.prodes.length) prode=store.prodes.length-1; save(); applyAccent(); render(); toast("Prode borrado");
   }, null, "Borrar", "Cancelar"); }
 
-/* ---------- export / import ---------- */
-function exportJSON(){
+/* ---------- copia de seguridad / restaurar ---------- */
+function normalizeBackupProdes(data){
+  let prodes=null;
+  if(data && Array.isArray(data.prodes)) prodes=data.prodes;
+  else if(Array.isArray(data)) prodes=data.map((p,i)=>({name:(p&&p.name)||('Prode '+(i+1)), preds:(p&&p.preds)||p||{}}));
+  if(!prodes||!prodes.length) throw new Error('formato no reconocido');
+  return prodes.map((p,i)=>({id:p&&p.id, name:String((p&&p.name)||('Prode '+(i+1))), preds:(p&&p.preds&&typeof p.preds==='object')?p.preds:{}, compareIds:Array.isArray(p&&p.compareIds)?p.compareIds:[], compareVisible:typeof (p&&p.compareVisible)==='boolean'?p.compareVisible:true}));
+}
+function normalizeSingleProde(data){
+  if((data && Array.isArray(data.prodes)) || Array.isArray(data)) return normalizeBackupProdes(data)[0];
+  if(!data || typeof data!=='object') throw new Error('formato no reconocido');
+  if(data.preds && typeof data.preds==='object') return normalizeBackupProdes([data])[0];
+  return normalizeBackupProdes([{name:'Prode importado', preds:data}])[0];
+}
+function backupJSON(){
   ensureProdeMeta(store);
   store.active=prode;
   const blob=new Blob([JSON.stringify(store,null,2)],{type:'application/json'});
   const url=URL.createObjectURL(blob); const a=document.createElement('a');
-  a.href=url; a.download='prode-mundial-2026_'+new Date().toISOString().slice(0,10)+'.json';
-  document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url); toast('Exportado ('+store.prodes.length+' prode/s)');
+  a.href=url; a.download='copia-seguridad-prode-mundial-2026_'+new Date().toISOString().slice(0,10)+'.json';
+  document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url); toast('Copia de seguridad creada ('+store.prodes.length+' prode/s)');
+}
+function restoreBackup(input){
+  const f=input.files&&input.files[0]; if(!f){ return; }
+  const r=new FileReader();
+  r.onload=()=>{
+    try{
+      const data=JSON.parse(r.result);
+      const prodes=normalizeBackupProdes(data);
+      const active=(data&&typeof data.active==='number')?data.active:0;
+      uiConfirm('Vas a restaurar '+prodes.length+' prode/s y reemplazar TODOS los actuales. ¿Continuar?',
+        function(){ store={prodes:prodes, active:active}; ensureProdeMeta(store); prode=Math.max(0,Math.min(store.active||0,store.prodes.length-1)); save(); applyAccent(); render(); toast('Restaurado: '+prodes.length+' prode/s'); },
+        null,
+        "Restaurar", "Cancelar");
+    }catch(e){ console.error(e); toast('Archivo inválido: '+e.message); }
+    input.value='';
+  };
+  r.readAsText(f);
+}
+function exportJSON(){
+  ensureProdeMeta(store);
+  const cur=store.prodes[prode];
+  const single={active:0, prodes:[cur]};
+  const safeName=cur.name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')||'prode';
+  const blob=new Blob([JSON.stringify(single,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob); const a=document.createElement('a');
+  a.href=url; a.download='prode-mundial-2026_'+safeName+'_'+new Date().toISOString().slice(0,10)+'.json';
+  document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url); toast('Prode exportado: '+cur.name);
 }
 function importJSON(input){
   const f=input.files&&input.files[0]; if(!f){ return; }
   const r=new FileReader();
   r.onload=()=>{
     try{
-      const data=JSON.parse(r.result); let prodes=null;
-      if(data && Array.isArray(data.prodes)) prodes=data.prodes;
-      else if(Array.isArray(data)) prodes=data.map((p,i)=>({name:(p&&p.name)||('Prode '+(i+1)), preds:(p&&p.preds)||p||{}}));
-      if(!prodes||!prodes.length) throw new Error('formato no reconocido');
-      prodes=prodes.map((p,i)=>({id:p&&p.id, name:String((p&&p.name)||('Prode '+(i+1))), preds:(p&&p.preds&&typeof p.preds==='object')?p.preds:{}, compareIds:Array.isArray(p&&p.compareIds)?p.compareIds:[], compareVisible:typeof (p&&p.compareVisible)==='boolean'?p.compareVisible:true}));
-      uiConfirm('Importás '+prodes.length+' prode/s. ¿Reemplazar TODOS los actuales, o agregarlos a los que ya tenés?',
-        function(){ store.prodes=prodes; prode=0; ensureProdeMeta(store); save(); applyAccent(); render(); toast('Reemplazado: '+prodes.length+' prode/s'); },
-        function(){ const n=store.prodes.length; store.prodes=store.prodes.concat(prodes); prode=n; ensureProdeMeta(store); save(); applyAccent(); render(); toast('Agregados: '+prodes.length+' prode/s'); },
-        "Reemplazar todo", "Agregar");
+      const data=JSON.parse(r.result);
+      const imported=normalizeSingleProde(data);
+      uiConfirm('Importar "'+imported.name+'". ¿Reemplazar el prode activo, o agregarlo como nuevo?',
+        function(){ const keepId=store.prodes[prode].id; imported.id=keepId; store.prodes[prode]=imported; ensureProdeMeta(store); save(); applyAccent(); render(); toast('Prode reemplazado'); },
+        function(){ store.prodes.push(imported); prode=store.prodes.length-1; ensureProdeMeta(store); save(); applyAccent(); render(); toast('Prode importado: '+imported.name); },
+        "Reemplazar activo", "Agregar nuevo");
     }catch(e){ console.error(e); toast('Archivo inválido: '+e.message); }
     input.value='';
   };
@@ -600,6 +645,4 @@ prode = Math.min(store.active||0, store.prodes.length-1);
 applyAccent(); buildNav(); render(); save(); updateSaveBadge();
 document.getElementById('modal').addEventListener('click',e=>{ if(e.target.id==='modal') closeModal(); });
 document.getElementById('imodal').addEventListener('click',e=>{ if(e.target.id==='imodal') iAbort(); });
-</script>
-</body>
-</html>
+</script></body></html>

@@ -90,7 +90,7 @@ Luego llama a `updateSaveBadge()` y `refreshProgress()`. Es el único punto de e
 Pinta el indicador `#savebadge`:
 
 - `storageOK === true` → "💾 Guardado automático" (verde).
-- `storageOK === false` → advertencia ámbar recomendando Exportar.
+- `storageOK === false` → advertencia ámbar recomendando Copia de seguridad.
 
 ### Helpers de acceso
 
@@ -213,18 +213,33 @@ Oculta el modal de texto.
 
 ---
 
-## Exportar / Importar
+## Copia de seguridad / Restaurar
+
+### `normalizeBackupProdes(data)`
+
+Normaliza archivos de respaldo antes de restaurar. Acepta tanto el formato completo nuevo (`{active, prodes:[...]}`) como un array suelto de prodes o predicciones. Devuelve prodes con `id`, `name`, `preds`, `compareIds` y `compareVisible` saneados.
+
+### `normalizeSingleProde(data)`
+
+Normaliza un archivo para importación individual. Si el JSON trae varios prodes, toma el primero. También acepta un objeto con `preds` o un mapa directo de predicciones.
+
+### `backupJSON()`
+
+Serializa `store` completo (todos los prodes y el índice activo) y dispara la descarga de `copia-seguridad-prode-mundial-2026_FECHA.json` vía un `<a download>` con un `Blob`. Es el respaldo confiable cuando el guardado automático no está disponible.
+
+### `restoreBackup(input)`
+
+Lee el archivo elegido (`FileReader`), parsea y normaliza los prodes. Luego, vía `uiConfirm`, restaura reemplazando todos los prodes actuales por los del archivo. Si el archivo trae `active`, intenta conservar ese prode activo dentro de los límites válidos.
+
+Estas acciones están separadas visualmente como herramientas **Globales** en el header.
 
 ### `exportJSON()`
 
-Serializa `store` completo (todos los prodes) y dispara la descarga de `prode-mundial-2026_FECHA.json` vía un `<a download>` con un `Blob`. Es el respaldo confiable cuando el guardado automático no está disponible.
+Exporta solo el prode activo, en un JSON compatible con `importJSON(input)` y también restaurable como copia de un único prode.
 
 ### `importJSON(input)`
 
-Lee el archivo elegido (`FileReader`), parsea y normaliza a la forma `{name, preds}`. Acepta tanto el formato nuevo (`{prodes:[...]}`) como un array suelto. Luego, vía `uiConfirm`, ofrece:
-
-- **Reemplazar todo** — sustituye `store.prodes`.
-- **Agregar** — concatena los importados a los existentes.
+Importa un solo prode desde JSON. Si el archivo tiene más de uno, usa el primero. Luego pregunta si reemplazar el prode activo o agregarlo como un prode nuevo.
 
 ---
 
@@ -326,4 +341,4 @@ Al final del script:
 1. Cargar marcadores tocando los inputs (la tabla de cada grupo se recalcula sola).
 2. Para sugerencias: 🤖 → **Copiar** → pegar en Claude Code → traer el JSON → **📥 Pegar respuesta IA**.
 3. Crear variantes con **＋ Nuevo** o **⧉ Duplicar** (clon independiente).
-4. Si el badge está en ámbar, **⬇ Exportar** para respaldar; **⬆ Importar** para restaurar o mover entre dispositivos.
+4. Si el badge está en ámbar, **⬇ Copia de seguridad** para respaldar todo; **⬆ Restaurar todo** para recuperar o mover entre dispositivos.
