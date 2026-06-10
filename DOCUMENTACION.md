@@ -33,13 +33,21 @@ Objeto raíz que se persiste. Estructura:
 {
   active: 0,                  // índice del prode activo
   prodes: [
-    { name: "Prode 1", preds: { "104456": { hs:2, as:0 }, ... } },
+    {
+      id: "p1",               // identificador estable para comparaciones
+      name: "Prode 1",
+      compareIds: ["p2"],     // otros prodes visibles como referencia
+      compareVisible: true,   // muestra/oculta resultados comparativos
+      preds: { "104456": { hs:2, as:0 }, ... }
+    },
     ...
   ]
 }
 ```
 
 `preds` indexa por `id` de partido. En grupos guarda `{hs, as}` (goles local/visitante). En eliminatorias agrega `{ht, at}` (nombres de los equipos clasificados, que el usuario tipea).
+
+`compareIds` guarda relaciones por `id` de prode, no por índice. Esto permite borrar o cambiar de prode activo sin romper las comparaciones configuradas.
 
 ### Constantes de configuración
 
@@ -88,6 +96,7 @@ Pinta el indicador `#savebadge`:
 
 - `P()` — devuelve el `preds` del prode activo (`store.prodes[prode].preds`).
 - `rec(id)` — devuelve (creando si hace falta) el registro `preds[id]` para mutarlo.
+- `ensureProdeMeta()` — migra prodes viejos agregando `id`, `compareIds` y `compareVisible`, y limpia referencias a comparativos inexistentes.
 
 > `prode` (variable global) es el índice activo; `curView` es la vista actual (letra de grupo o nombre de fase).
 
@@ -119,9 +128,31 @@ Cambia el `name` del prode activo vía `uiPrompt`.
 
 Borra el prode activo (con `uiConfirm`). Bloquea si queda uno solo. Reajusta el índice activo.
 
+También quita el `id` borrado de los `compareIds` de los prodes restantes para que no queden comparaciones colgantes.
+
 ### `colorOf(i)` / `applyAccent()`
 
 `colorOf` mapea índice → color de `PALETTE`. `applyAccent` setea las variables CSS `--accent` y `--c` con el color del prode activo (tematiza foco de inputs, badges, barra de progreso, etc.).
+
+---
+
+## Comparaciones entre prodes
+
+Cada prode puede marcar otros prodes como comparativos desde la fila `Comparar:` del header. Los chips activan o desactivan relaciones en `compareIds`; el botón `Ocultar resultados` / `Mostrar resultados` cambia `compareVisible` para el prode activo.
+
+### Render de comparaciones
+
+`activeComparisons()` resuelve los prodes comparativos válidos del prode activo. `comparisonRows(m)` agrega, debajo de cada partido, una cápsula por comparativo con:
+
+- Nombre del prode comparativo.
+- Marcador `hs:as`, o `Sin dato` si falta.
+- Badge contra el resultado del prode activo:
+  - `Exacto` — mismo marcador.
+  - `Mismo signo` — mismo ganador o empate.
+  - `Diferente` — ambos cargados, pero no coinciden.
+  - `Sin base` — el prode activo no tiene marcador cargado.
+
+En eliminatorias también muestra `ht`/`at` del comparativo si existen, pero el match se calcula solo con `hs/as`.
 
 ---
 

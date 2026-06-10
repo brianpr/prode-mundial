@@ -23,6 +23,12 @@ h1{font-size:20px;margin:0 0 2px;display:flex;align-items:center;gap:8px}
 .pchip.active .dot{box-shadow:0 0 0 3px color-mix(in srgb,var(--c) 22%,transparent)}
 .pnew{flex:none;border:1.5px dashed var(--line);background:transparent;padding:7px 12px;border-radius:11px;font-weight:700;cursor:pointer;font-size:13.5px;color:var(--mut)}
 .pnew:hover{border-color:var(--accent);color:var(--accent)}
+.comparebar{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:6px;font-size:11.5px;color:var(--mut)}
+.clabel{font-weight:700;color:var(--mut);margin-right:2px}
+.cchip{border:1px solid var(--line);background:#fff;border-radius:18px;padding:4px 9px;font-size:11.5px;font-weight:700;cursor:pointer;color:var(--mut);display:inline-flex;align-items:center;gap:5px}
+.cchip .dot{width:7px;height:7px;border-radius:50%;background:var(--c);flex:none}
+.cchip.on{border-color:var(--c);color:var(--c);background:#fff}
+.cchip.muted{border-style:dashed}
 .btn{border:1px solid var(--line);background:#fff;border-radius:9px;padding:7px 11px;font-size:12.5px;font-weight:600;cursor:pointer;color:var(--ink);display:inline-flex;align-items:center;gap:5px;transition:.12s}
 .btn:hover{background:#f8fafc}
 .btn:active{transform:scale(.97)}
@@ -57,6 +63,16 @@ h1{font-size:20px;margin:0 0 2px;display:flex;align-items:center;gap:8px}
 .mxai{border:0;background:transparent;cursor:pointer;font-size:15px;opacity:.5;padding:2px}
 .mxai:hover{opacity:1}
 .meta{grid-column:1/-1;font-size:10.5px;color:var(--mut);padding-left:2px;margin-top:-2px}
+.comparisons{grid-column:1/-1;display:flex;gap:6px;flex-wrap:wrap;padding:2px 0 1px}
+.comp{border:1px solid var(--line);background:#fafafa;border-radius:8px;padding:4px 7px;font-size:11px;display:inline-flex;align-items:center;gap:6px;color:var(--mut);max-width:100%}
+.comp .dot{width:7px;height:7px;border-radius:50%;background:var(--c);flex:none}
+.comp b{color:var(--ink);font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:130px}
+.comp .scoretxt{font-weight:800;color:var(--ink)}
+.mbadge{border-radius:999px;padding:2px 6px;font-size:10px;font-weight:800;background:#f1f5f9;color:#475569}
+.mbadge.exact{background:var(--okbg);color:var(--ok)}
+.mbadge.sign{background:#fef9c3;color:#a16207}
+.mbadge.diff{background:#fef2f2;color:#dc2626}
+.mbadge.base{background:#f1f5f9;color:#64748b}
 table.stand{width:100%;border-collapse:collapse;margin-top:10px;font-size:12px}
 .stand th{color:var(--mut);font-weight:600;text-align:center;padding:4px 3px;font-size:10.5px;text-transform:uppercase}
 .stand th:first-child,.stand td:first-child{text-align:left}
@@ -110,6 +126,7 @@ table.stand{width:100%;border-collapse:collapse;margin-top:10px;font-size:12px}
    <button class="btn sm" onclick="document.getElementById('importFile').click()" title="Cargar prodes desde un archivo JSON">⬆ Importar</button>
    <input type="file" id="importFile" accept="application/json,.json" style="display:none" onchange="importJSON(this)">
  </div>
+ <div class="comparebar" id="comparebar"></div>
  <div class="bar"><i id="prog" style="width:0%"></i></div>
  <div class="row" style="justify-content:space-between;font-size:11.5px;color:var(--mut)">
    <span id="progtxt">0 / 104 cargados</span>
@@ -160,6 +177,34 @@ function restore(){
   return null;
 }
 function load(){ return restore() || { prodes:[{name:"Prode 1",preds:{}},{name:"Prode 2",preds:{}}], active:0 }; }
+function uniqueProdeId(base, used){
+  const root=String(base||'p1').replace(/[^a-zA-Z0-9_-]/g,'')||'p1';
+  let id=root, n=2;
+  while(used.has(id)){ id=root+'_'+n++; }
+  used.add(id); return id;
+}
+function nextProdeId(){
+  const used=new Set(store.prodes.map(p=>String(p.id||'')));
+  return uniqueProdeId('p'+(store.prodes.length+1), used);
+}
+function ensureProdeMeta(s){
+  const used=new Set(), valid=new Set();
+  (s.prodes||[]).forEach((p,i)=>{
+    if(!p || typeof p!=='object') p=s.prodes[i]={name:'Prode '+(i+1), preds:{}};
+    p.name=String(p.name||('Prode '+(i+1)));
+    if(!p.preds || typeof p.preds!=='object') p.preds={};
+    p.id=uniqueProdeId(p.id||('p'+(i+1)), used);
+    if(!Array.isArray(p.compareIds)) p.compareIds=[];
+    if(typeof p.compareVisible!=='boolean') p.compareVisible=true;
+    valid.add(p.id);
+  });
+  s.prodes.forEach(p=>{
+    const own=p.id, seen=new Set();
+    p.compareIds=p.compareIds.map(String).filter(id=>id!==own && valid.has(id) && !seen.has(id) && seen.add(id));
+  });
+  return s;
+}
+ensureProdeMeta(store);
 function save(){ store.active=prode; const s=JSON.stringify(store); let ok=false;
   try{ localStorage.setItem(LS_KEY, s); if(localStorage.getItem(LS_KEY)===s) ok=true; }catch(e){}
   try{ window.name = MARK + s; }catch(e){}
@@ -188,22 +233,61 @@ function buildProdeBar(){
   const add=document.createElement('button'); add.className='pnew'; add.textContent='＋ Nuevo'; add.onclick=()=>newProde();
   bar.appendChild(add);
 }
+function buildCompareControls(){
+  const bar=document.getElementById('comparebar'); if(!bar) return;
+  const cur=store.prodes[prode]; bar.innerHTML='';
+  if(store.prodes.length<=1){ return; }
+  const label=document.createElement('span'); label.className='clabel'; label.textContent='Comparar:'; bar.appendChild(label);
+  store.prodes.forEach((p,i)=>{
+    if(i===prode) return;
+    const on=(cur.compareIds||[]).includes(p.id);
+    const b=document.createElement('button');
+    b.className='cchip'+(on?' on':'');
+    b.style.setProperty('--c',colorOf(i));
+    b.title=(on?'Quitar comparación con ':'Comparar con ')+p.name;
+    b.innerHTML=`<span class="dot"></span>${escapeHtml(p.name)}`;
+    b.onclick=()=>toggleCompare(p.id);
+    bar.appendChild(b);
+  });
+  const selected=activeComparisons().length;
+  const vis=document.createElement('button');
+  vis.className='cchip muted';
+  vis.textContent=cur.compareVisible===false?'Mostrar resultados':'Ocultar resultados';
+  vis.disabled=!selected;
+  vis.title=selected?'Mostrar u ocultar resultados comparativos':'Elegí al menos un prode comparativo';
+  vis.onclick=toggleCompareVisible;
+  bar.appendChild(vis);
+}
+function toggleCompare(id){
+  const cur=store.prodes[prode], ids=cur.compareIds||[];
+  cur.compareIds=ids.includes(id)?ids.filter(x=>x!==id):ids.concat(id);
+  save(); render();
+}
+function toggleCompareVisible(){
+  const cur=store.prodes[prode];
+  cur.compareVisible=cur.compareVisible===false;
+  save(); render();
+}
 function setProde(i){ prode=i; save(); applyAccent(); render(); }
 function newProde(){ uiPrompt("Nuevo prode","Nombre:", "Prode "+(store.prodes.length+1), function(name){
-  if(!name) return; store.prodes.push({name, preds:{}}); prode=store.prodes.length-1; save(); applyAccent(); render(); toast("Creado: "+name); }); }
+  if(!name) return; store.prodes.push({id:nextProdeId(), name, preds:{}, compareIds:[], compareVisible:true}); prode=store.prodes.length-1; save(); applyAccent(); render(); toast("Creado: "+name); }); }
 function cloneProde(){ const base=store.prodes[prode];
   uiPrompt("Duplicar prode","Nombre del clon:", base.name+" (copia)", function(name){
-    if(!name) return; store.prodes.push({name, preds:JSON.parse(JSON.stringify(base.preds))}); prode=store.prodes.length-1; save(); applyAccent(); render(); toast("Clon creado: "+name); }); }
+    if(!name) return; store.prodes.push({id:nextProdeId(), name, preds:JSON.parse(JSON.stringify(base.preds)), compareIds:[], compareVisible:true}); prode=store.prodes.length-1; save(); applyAccent(); render(); toast("Clon creado: "+name); }); }
 function renameProde(){ const cur=store.prodes[prode].name;
   uiPrompt("Renombrar prode","Nombre:", cur, function(name){
-    if(!name||name===cur) return; store.prodes[prode].name=name; save(); buildProdeBar(); toast("Renombrado"); }); }
+    if(!name||name===cur) return; store.prodes[prode].name=name; save(); render(); toast("Renombrado"); }); }
 function deleteProde(){ if(store.prodes.length<=1){ toast("Tiene que quedar al menos un prode"); return; }
   uiConfirm('¿Borrar "'+store.prodes[prode].name+'" y todos sus pronósticos?', function(){
-    store.prodes.splice(prode,1); if(prode>=store.prodes.length) prode=store.prodes.length-1; save(); applyAccent(); render(); toast("Prode borrado");
+    const removedId=store.prodes[prode].id;
+    store.prodes.splice(prode,1);
+    store.prodes.forEach(p=>p.compareIds=(p.compareIds||[]).filter(id=>id!==removedId));
+    if(prode>=store.prodes.length) prode=store.prodes.length-1; save(); applyAccent(); render(); toast("Prode borrado");
   }, null, "Borrar", "Cancelar"); }
 
 /* ---------- export / import ---------- */
 function exportJSON(){
+  ensureProdeMeta(store);
   store.active=prode;
   const blob=new Blob([JSON.stringify(store,null,2)],{type:'application/json'});
   const url=URL.createObjectURL(blob); const a=document.createElement('a');
@@ -219,10 +303,10 @@ function importJSON(input){
       if(data && Array.isArray(data.prodes)) prodes=data.prodes;
       else if(Array.isArray(data)) prodes=data.map((p,i)=>({name:(p&&p.name)||('Prode '+(i+1)), preds:(p&&p.preds)||p||{}}));
       if(!prodes||!prodes.length) throw new Error('formato no reconocido');
-      prodes=prodes.map((p,i)=>({name:String((p&&p.name)||('Prode '+(i+1))), preds:(p&&p.preds&&typeof p.preds==='object')?p.preds:{}}));
+      prodes=prodes.map((p,i)=>({id:p&&p.id, name:String((p&&p.name)||('Prode '+(i+1))), preds:(p&&p.preds&&typeof p.preds==='object')?p.preds:{}, compareIds:Array.isArray(p&&p.compareIds)?p.compareIds:[], compareVisible:typeof (p&&p.compareVisible)==='boolean'?p.compareVisible:true}));
       uiConfirm('Importás '+prodes.length+' prode/s. ¿Reemplazar TODOS los actuales, o agregarlos a los que ya tenés?',
-        function(){ store.prodes=prodes; prode=0; save(); applyAccent(); render(); toast('Reemplazado: '+prodes.length+' prode/s'); },
-        function(){ const n=store.prodes.length; store.prodes=store.prodes.concat(prodes); prode=n; save(); applyAccent(); render(); toast('Agregados: '+prodes.length+' prode/s'); },
+        function(){ store.prodes=prodes; prode=0; ensureProdeMeta(store); save(); applyAccent(); render(); toast('Reemplazado: '+prodes.length+' prode/s'); },
+        function(){ const n=store.prodes.length; store.prodes=store.prodes.concat(prodes); prode=n; ensureProdeMeta(store); save(); applyAccent(); render(); toast('Agregados: '+prodes.length+' prode/s'); },
         "Reemplazar todo", "Agregar");
     }catch(e){ console.error(e); toast('Archivo inválido: '+e.message); }
     input.value='';
@@ -326,6 +410,7 @@ function chip(v,label){ const b=document.createElement('button'); b.className='c
 /* ---------- render ---------- */
 function render(){
   buildProdeBar();
+  buildCompareControls();
   document.querySelectorAll('.chip').forEach(c=>c.classList.toggle('on', c.dataset.v===curView));
   const isGroup = curView.length===1;
   document.getElementById('groups').style.display=isGroup?'block':'none';
@@ -342,6 +427,31 @@ function scoreCell(m){ const r=P()[m.id]||{};
     <span class="x">:</span>
     <input type="number" min="0" max="20" inputmode="numeric" value="${r.as??''}" onchange="setScore(${m.id},'as',this.value)" aria-label="goles visitante">
    </div>`; }
+function activeComparisons(){
+  const cur=store.prodes[prode], ids=new Set(cur.compareIds||[]);
+  return store.prodes.map((p,i)=>({p,i})).filter(x=>x.i!==prode && ids.has(x.p.id));
+}
+function hasScore(r){ return !!r && r.hs!=='' && r.hs!=null && r.as!=='' && r.as!=null; }
+function scoreSign(r){ const hs=+r.hs, as=+r.as; return hs===as?'e':(hs>as?'h':'a'); }
+function matchBadge(base, other){
+  if(!hasScore(base)) return '<span class="mbadge base">Sin base</span>';
+  if(!hasScore(other)) return '<span class="mbadge base">Sin dato</span>';
+  if(+base.hs===+other.hs && +base.as===+other.as) return '<span class="mbadge exact">Exacto</span>';
+  if(scoreSign(base)===scoreSign(other)) return '<span class="mbadge sign">Mismo signo</span>';
+  return '<span class="mbadge diff">Diferente</span>';
+}
+function comparisonRows(m){
+  const cur=store.prodes[prode];
+  if(cur.compareVisible===false) return '';
+  const comps=activeComparisons();
+  if(!comps.length) return '';
+  const base=P()[m.id]||{};
+  return `<div class="comparisons">${comps.map(({p,i})=>{
+    const r=(p.preds&&p.preds[m.id])||{}, score=hasScore(r)?`${r.hs}:${r.as}`:'Sin dato';
+    const teams=(m.stage==='ko'&&(r.ht||r.at))?` · ${escapeHtml(r.ht||'?')} vs ${escapeHtml(r.at||'?')}`:'';
+    return `<span class="comp" style="--c:${colorOf(i)}"><span class="dot"></span><b>${escapeHtml(p.name)}</b><span class="scoretxt">${escapeHtml(score)}</span>${matchBadge(base,r)}${teams}</span>`;
+  }).join('')}</div>`;
+}
 function renderGroup(g){
   const ms=MATCHES.filter(m=>m.stage==='group'&&m.group===g);
   const el=document.getElementById('groups');
@@ -360,6 +470,7 @@ function matchRow(m){
     ${teamCell('h',m)} ${scoreCell(m)} ${teamCell('a',m)}
     <button class="mxai" title="Prompt IA de este partido" onclick="openPrompt('m${m.id}')">🤖</button>
     <div class="meta">J${m.md} · ${fmtDate(m.date)} ${m.time}${m.stadium?' · '+m.stadium:''}</div>
+    ${comparisonRows(m)}
   </div>`;
 }
 function fmtDate(d){ const p=d.split('-'); return p[2]+'/'+p[1]; }
@@ -409,12 +520,13 @@ function koRow(m){
       <input class="tn" value="${escapeHtml(r.at??'')}" placeholder="Equipo" onchange="setScore(${m.id},'at',this.value)"></div>
     <button class="mxai" title="Prompt IA de este partido" onclick="openPrompt('m${m.id}')">🤖</button>
     <div class="meta">${fmtDate(m.date)} ${m.time}</div>
+    ${comparisonRows(m)}
   </div>`;
 }
 
 /* ---------- edits ---------- */
 function setScore(id,k,v){ rec(id)[k]=v; save();
-  const m=MATCHES.find(x=>x.id===id); if(m && m.stage==='group') renderGroup(m.group); }
+  const m=MATCHES.find(x=>x.id===id); if(m && m.stage==='group') renderGroup(m.group); else if(m) renderKO(m.group); }
 
 /* ---------- modal de entrada propio (prompt/confirm no andan en el sandbox) ---------- */
 function iAbort(){ document.getElementById('imodal').classList.remove('show'); }
