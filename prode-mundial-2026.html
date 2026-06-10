@@ -68,6 +68,10 @@ h1{font-size:20px;margin:0 0 2px;display:flex;align-items:center;gap:8px}
 .comp .dot{width:7px;height:7px;border-radius:50%;background:var(--c);flex:none}
 .comp b{color:var(--ink);font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:130px}
 .comp .scoretxt{font-weight:800;color:var(--ink)}
+.compactions{grid-column:1/-1;display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding:1px 0 4px}
+.mini{border:1px solid var(--line);background:#fff;border-radius:7px;padding:3px 7px;font-size:10.5px;font-weight:800;color:var(--mut);cursor:pointer}
+.mini:hover{border-color:var(--accent);color:var(--accent);background:var(--accentbg)}
+.mini:disabled{opacity:.45;cursor:not-allowed}
 .mbadge{border-radius:999px;padding:2px 6px;font-size:10px;font-weight:800;background:#f1f5f9;color:#475569}
 .mbadge.exact{background:var(--okbg);color:var(--ok)}
 .mbadge.sign{background:#fef9c3;color:#a16207}
@@ -431,8 +435,40 @@ function activeComparisons(){
   const cur=store.prodes[prode], ids=new Set(cur.compareIds||[]);
   return store.prodes.map((p,i)=>({p,i})).filter(x=>x.i!==prode && ids.has(x.p.id));
 }
+function jsStr(s){ return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
 function hasScore(r){ return !!r && r.hs!=='' && r.hs!=null && r.as!=='' && r.as!=null; }
 function scoreSign(r){ const hs=+r.hs, as=+r.as; return hs===as?'e':(hs>as?'h':'a'); }
+function rerenderMatch(id){
+  const m=MATCHES.find(x=>x.id===id);
+  if(m && m.stage==='group') renderGroup(m.group); else if(m) renderKO(m.group);
+}
+function applyScoreFromRecord(id, r, label){
+  if(!hasScore(r)){ toast('Ese prode no tiene resultado para este partido'); return; }
+  const dst=rec(id); dst.hs=+r.hs; dst.as=+r.as;
+  if(r.ht) dst.ht=r.ht; if(r.at) dst.at=r.at;
+  save(); rerenderMatch(id); toast(label||('Copiado '+dst.hs+':'+dst.as));
+}
+function suggestedScoreFor(m){
+  const votes={};
+  activeComparisons().forEach(({p})=>{
+    const r=p.preds&&p.preds[m.id];
+    if(!hasScore(r)) return;
+    const key=(+r.hs)+':'+(+r.as);
+    if(!votes[key]) votes[key]={hs:+r.hs, as:+r.as, count:0, first:p.name, ht:r.ht, at:r.at};
+    votes[key].count++;
+  });
+  const arr=Object.values(votes).sort((a,b)=>b.count-a.count);
+  return arr[0]||null;
+}
+function applySuggestedScore(id){
+  const m=MATCHES.find(x=>x.id===id), sug=m&&suggestedScoreFor(m);
+  if(!sug){ toast('No hay resultados comparativos para sugerir'); return; }
+  applyScoreFromRecord(id, sug, 'Sugerido aplicado '+sug.hs+':'+sug.as);
+}
+function copyComparisonScore(id, compareId){
+  const src=store.prodes.find(p=>p.id===compareId), r=src&&src.preds&&src.preds[id];
+  applyScoreFromRecord(id, r, src?('Copiado de '+src.name):'Copiado');
+}
 function matchBadge(base, other){
   if(!hasScore(base)) return '<span class="mbadge base">Sin base</span>';
   if(!hasScore(other)) return '<span class="mbadge base">Sin dato</span>';
@@ -446,10 +482,14 @@ function comparisonRows(m){
   const comps=activeComparisons();
   if(!comps.length) return '';
   const base=P()[m.id]||{};
-  return `<div class="comparisons">${comps.map(({p,i})=>{
+  const sug=suggestedScoreFor(m);
+  return `<div class="compactions">
+    <button class="mini" onclick="applySuggestedScore(${m.id})" ${sug?'':'disabled'} title="Completar este partido con un resultado sugerido por los comparativos">Sugerir${sug?' '+sug.hs+':'+sug.as:''}</button>
+   </div>
+   <div class="comparisons">${comps.map(({p,i})=>{
     const r=(p.preds&&p.preds[m.id])||{}, score=hasScore(r)?`${r.hs}:${r.as}`:'Sin dato';
     const teams=(m.stage==='ko'&&(r.ht||r.at))?` · ${escapeHtml(r.ht||'?')} vs ${escapeHtml(r.at||'?')}`:'';
-    return `<span class="comp" style="--c:${colorOf(i)}"><span class="dot"></span><b>${escapeHtml(p.name)}</b><span class="scoretxt">${escapeHtml(score)}</span>${matchBadge(base,r)}${teams}</span>`;
+    return `<span class="comp" style="--c:${colorOf(i)}"><span class="dot"></span><b>${escapeHtml(p.name)}</b><span class="scoretxt">${escapeHtml(score)}</span>${matchBadge(base,r)}${teams}<button class="mini" onclick="copyComparisonScore(${m.id},'${jsStr(p.id)}')">Copiar</button></span>`;
   }).join('')}</div>`;
 }
 function renderGroup(g){
@@ -526,7 +566,7 @@ function koRow(m){
 
 /* ---------- edits ---------- */
 function setScore(id,k,v){ rec(id)[k]=v; save();
-  const m=MATCHES.find(x=>x.id===id); if(m && m.stage==='group') renderGroup(m.group); else if(m) renderKO(m.group); }
+  rerenderMatch(id); }
 
 /* ---------- modal de entrada propio (prompt/confirm no andan en el sandbox) ---------- */
 function iAbort(){ document.getElementById('imodal').classList.remove('show'); }

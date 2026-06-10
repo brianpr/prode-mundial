@@ -154,6 +154,12 @@ Cada prode puede marcar otros prodes como comparativos desde la fila `Comparar:`
 
 En eliminatorias también muestra `ht`/`at` del comparativo si existen, pero el match se calcula solo con `hs/as`.
 
+### Acciones rápidas
+
+Debajo de cada partido comparado aparece `Sugerir N:M` cuando hay al menos un marcador en los comparativos. `suggestedScoreFor(m)` agrupa los marcadores completos por `hs:as` y elige el más repetido; si no hay mayoría, usa el primer marcador completo según el orden de prodes. `applySuggestedScore(id)` copia ese marcador al prode activo.
+
+Cada cápsula comparativa incluye `Copiar`, que aplica exactamente el marcador de ese prode al partido actual. En eliminatorias también copia `ht`/`at` si el comparativo los tiene cargados.
+
 ---
 
 ## Asistencia de IA (copiar / pegar)
