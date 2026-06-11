@@ -52,6 +52,7 @@ Objeto raíz que se persiste. Estructura:
 ### Constantes de configuración
 
 - `PHASES` — orden de las fases eliminatorias para la navegación.
+- `VIEW_SUMMARY` / `VIEW_BY_DATE` — identificadores internos de las vistas especiales `Resumen` y `Por fecha`.
 - `PALETTE` — colores por prode (se cicla con módulo).
 - `LS_KEY` — clave de localStorage (`prodeMundial2026_v2`).
 - `MARK` — prefijo del espejo en `window.name`.
@@ -98,7 +99,7 @@ Pinta el indicador `#savebadge`:
 - `rec(id)` — devuelve (creando si hace falta) el registro `preds[id]` para mutarlo.
 - `ensureProdeMeta()` — migra prodes viejos agregando `id`, `compareIds` y `compareVisible`, y limpia referencias a comparativos inexistentes.
 
-> `prode` (variable global) es el índice activo; `curView` es la vista actual (letra de grupo o nombre de fase).
+> `prode` (variable global) es el índice activo; `curView` es la vista actual (letra de grupo, nombre de fase o una vista especial).
 
 ---
 
@@ -247,15 +248,22 @@ Importa un solo prode desde JSON. Si el archivo tiene más de uno, usa el primer
 
 ### `render()`
 
-Orquestador. Reconstruye la barra de prodes, marca el chip de navegación activo, y muestra grupos o eliminatorias según si `curView` es una letra (grupo) o una fase. Llama `refreshProgress()`.
+Orquestador. Reconstruye la barra de prodes, marca el chip de navegación activo, y muestra:
+
+- `Resumen` (`VIEW_SUMMARY`) con todas las posiciones de grupo juntas.
+- `Por fecha` (`VIEW_BY_DATE`) con todos los partidos ordenados cronológicamente.
+- Un grupo si `curView` es una letra.
+- Una eliminatoria si `curView` es una fase.
+
+Llama `refreshProgress()`.
 
 ### `buildNav()` / `chip(v, label)`
 
-Construyen los chips de navegación: 12 grupos + las fases de `PHASES`. Cada chip cambia `curView` y re-renderiza.
+Construyen los chips de navegación: vistas especiales (`Resumen`, `Por fecha`), 12 grupos y las fases de `PHASES`. Cada chip cambia `curView` y re-renderiza.
 
 ### `refreshProgress()`
 
-Cuenta partidos cargados (con `hs` y `as` no vacíos) del prode activo, actualiza la barra `#prog` y el texto, y marca con clase `done` los chips de navegación cuyos partidos están todos completos. `matchesOf(v)` devuelve los partidos de una vista.
+Cuenta partidos cargados (con `hs` y `as` no vacíos) del prode activo, actualiza la barra `#prog` y el texto, y marca con clase `done` los chips de navegación cuyos partidos están todos completos. `matchesOf(v)` devuelve los partidos de una vista, incluyendo todos los grupos para `Resumen` y todo el fixture para `Por fecha`.
 
 ### `teamCell(side, m)` / `scoreCell(m)`
 
@@ -264,6 +272,14 @@ Generan el HTML de un equipo (bandera + nombre, alineado según local/visitante)
 ### `renderGroup(g)`
 
 Renderiza la tarjeta de un grupo: header con botón 🤖 (`openPrompt(g)`), las 6 filas de partidos (`matchRow`), la tabla de posiciones (`standingsTable`) y la leyenda.
+
+### `renderSummary()`
+
+Renderiza una vista limpia de consulta con las 12 tablas de posiciones en una grilla compacta, sin inputs de partidos. Muestra el nombre del prode activo y el avance de carga de la fase de grupos.
+
+### `renderByDate()` / `dateMatchRow(m)`
+
+Renderiza todo el fixture ordenado por `date` + `time`, agrupado por día. Las filas siguen siendo editables: para grupos usa equipos fijos y marcador; para eliminatorias agrega inputs `ht`/`at` igual que la vista de fase.
 
 ### `matchRow(m)`
 
@@ -279,7 +295,7 @@ Formatea `YYYY-MM-DD` → `DD/MM`.
 
 ### `setScore(id, k, v)`
 
-Handler de todos los inputs (marcador y nombres de equipos KO). Escribe `rec(id)[k] = v`, guarda, y si es partido de grupo re-renderiza el grupo para actualizar la tabla de posiciones en vivo.
+Handler de todos los inputs (marcador y nombres de equipos KO). Escribe `rec(id)[k] = v`, guarda, y llama a `rerenderMatch(id)`: en vistas especiales re-renderiza la vista completa; en grupos/eliminatorias actualiza la tarjeta correspondiente.
 
 ---
 
