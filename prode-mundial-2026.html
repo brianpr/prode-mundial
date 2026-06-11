@@ -534,6 +534,21 @@ function applySuggestedScore(id){
   if(!sug){ toast('No hay resultados comparativos para sugerir'); return; }
   applyScoreFromRecord(id, sug, 'Sugerido aplicado '+sug.hs+':'+sug.as);
 }
+function applySuggestedGroup(g){
+  const ms=MATCHES.filter(m=>m.stage==='group'&&m.group===g);
+  let n=0;
+  ms.forEach(m=>{
+    const sug=suggestedScoreFor(m);
+    if(!sug) return;
+    const dst=rec(m.id);
+    dst.hs=sug.hs; dst.as=sug.as;
+    n++;
+  });
+  if(!n){ toast('No hay sugerencias para el grupo '+g); return; }
+  save();
+  if(curView===g) renderGroup(g); else render();
+  toast('Sugeridos '+n+' partido'+(n===1?'':'s')+' del grupo '+g);
+}
 function copyComparisonScore(id, compareId){
   const src=store.prodes.find(p=>p.id===compareId), r=src&&src.preds&&src.preds[id];
   applyScoreFromRecord(id, r, src?('Copiado de '+src.name):'Copiado');
@@ -628,11 +643,15 @@ function dateMatchRow(m){
 }
 function renderGroup(g){
   const ms=MATCHES.filter(m=>m.stage==='group'&&m.group===g);
+  const suggestCount=ms.filter(m=>suggestedScoreFor(m)).length;
   const el=document.getElementById('groups');
   el.innerHTML=`<div class="gcard">
     <div class="ghead">
       <div class="gtitle"><span class="gletter">${g}</span> Grupo ${g}</div>
-      <button class="btn ai sm" onclick="openPrompt('${g}')" title="Prompt para que una IA complete este grupo">🤖 Prompt grupo</button>
+      <div class="row">
+        <button class="btn sm" onclick="applySuggestedGroup('${g}')" ${suggestCount?'':'disabled'} title="Completar el grupo con los resultados sugeridos por los comparativos">Sugerir grupo${suggestCount?' ('+suggestCount+')':''}</button>
+        <button class="btn ai sm" onclick="openPrompt('${g}')" title="Prompt para que una IA complete este grupo">🤖 Prompt grupo</button>
+      </div>
     </div>
     <div id="ml-${g}">${ms.map(m=>matchRow(m)).join('')}</div>
     ${standingsTable(g,ms)}

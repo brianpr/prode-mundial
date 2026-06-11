@@ -159,6 +159,8 @@ En eliminatorias también muestra `ht`/`at` del comparativo si existen, pero el 
 
 Debajo de cada partido comparado aparece `Sugerir N:M` cuando hay al menos un marcador en los comparativos. `suggestedScoreFor(m)` agrupa los marcadores completos por `hs:as` y elige el más repetido; si no hay mayoría, usa el primer marcador completo según el orden de prodes. `applySuggestedScore(id)` copia ese marcador al prode activo.
 
+En el header de cada grupo, `Sugerir grupo` muestra la cantidad de partidos con sugerencia disponible y `applySuggestedGroup(g)` aplica todos esos marcadores juntos. El botón queda deshabilitado si no hay comparativos activos con resultados para ese grupo.
+
 Cada cápsula comparativa incluye `Copiar`, que aplica exactamente el marcador de ese prode al partido actual. En eliminatorias también copia `ht`/`at` si el comparativo los tiene cargados.
 
 ---
@@ -271,7 +273,7 @@ Generan el HTML de un equipo (bandera + nombre, alineado según local/visitante)
 
 ### `renderGroup(g)`
 
-Renderiza la tarjeta de un grupo: header con botón 🤖 (`openPrompt(g)`), las 6 filas de partidos (`matchRow`), la tabla de posiciones (`standingsTable`) y la leyenda.
+Renderiza la tarjeta de un grupo: header con botón `Sugerir grupo` (`applySuggestedGroup(g)`) y botón 🤖 (`openPrompt(g)`), las 6 filas de partidos (`matchRow`), la tabla de posiciones (`standingsTable`) y la leyenda.
 
 ### `renderSummary()`
 
